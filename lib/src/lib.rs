@@ -1,4 +1,5 @@
 use std::ffi::{CStr, CString};
+use std::iter::Map;
 use std::ops::Deref;
 use imgui_sys::*;
 #[cfg(windows)]
@@ -15,7 +16,6 @@ use crate::api::owner::Faction;
 use crate::api::owner::Faction::{BLUE, GREEN, RED};
 use crate::api::world_map_type::WorldMapType;
 use std::rc::Rc;
-use crate::icons::Icon::ObjectiveCastle;
 
 #[cfg(windows)]
 type GfxDevice = d3d11::ID3D11Device;
@@ -34,14 +34,13 @@ mod icons;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut AAAA: Option<ImGuiIcon> = None;
+static mut AAAB: Option<Map<icons::Icon, ImGuiIcon>> = None;
 
 
 #[cfg(not(windows))]
 pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::imgui::Textures<imgui_glium_renderer::Texture>) {
-    let x1 = |x: imgui_glium_renderer::Texture| {
-        textures.insert(x)
-    };
-    nithanim_setup_internal(device, x1);
+    let mut f = |x: imgui_glium_renderer::Texture| textures.insert(x);
+    nithanim_setup_internal(device, &mut f);
 }
 
 #[cfg(windows)]
@@ -54,7 +53,7 @@ pub extern "C" fn nithanim_setup(device: GfxDevice) {
 }
 
 
-fn nithanim_setup_internal<F>(device: GfxDevice, x1: F)
+fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
     where
         F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
     //imgui_sys::igSetCurrentContext()
@@ -64,9 +63,14 @@ fn nithanim_setup_internal<F>(device: GfxDevice, x1: F)
     unsafe {
         MATCHUP = Some(matchup);
 
-        let result = load_icon(ObjectiveCastle, device, x1);
-        let ic = result.unwrap();
-        AAAA = Some(ic);
+        for icon in [icons::Icon::ObjectiveCastle,
+            icons::Icon::ObjectiveKeep,
+            icons::Icon::ObjectiveTower,
+            icons::Icon::ObjectiveCamp,
+            icons::Icon::ObjectiveSentry, ] {
+            let result = load_icon(icon, device, imgui_converter);
+            AAAA = Some(result.unwrap());
+        }
     }
 }
 
@@ -117,13 +121,13 @@ pub extern "C" fn nithanim_ui() {
         );
 
 
-        igDummy(ImVec2::new(200f32, 200f32));
+        //igDummy(ImVec2::new(200f32, 200f32));
         igEnd();
     }
 }
 
 #[cfg(not(windows))]
-unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, mut x1: F) -> Result<ImGuiIcon, String>
+unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &mut F) -> Result<ImGuiIcon, String>
     where
         F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
     let icon_data = icon.value();
@@ -142,7 +146,7 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, mut x1: F) -> Resul
 
     Ok(ImGuiIcon {
         size: icon.value().size,
-        texture: x1(texture),
+        texture: imgui_converter(texture),
     })
 }
 

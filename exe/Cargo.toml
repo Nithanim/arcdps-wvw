@@ -1,0 +1,20 @@
+[package]
+name = "imgui_wvw_exe"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+imgui_wvw = {path = "../lib"}
+imgui = "0.7.0"
+#imgui-winit = { version = "0.1.2"}
+imgui-winit-support = { version = "0.7.0" }
+#winit = { version = "0.27.2", features = ["x11"] }
+
+winit = { version = "0.24.0" }
+
+imgui-glium-renderer = "0.7.0"
+glium = { version = "0.29.1", default-features = true }
+

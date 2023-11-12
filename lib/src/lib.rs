@@ -14,14 +14,7 @@ use crate::api::matchup::Matchup;
 use crate::api::owner::Faction;
 use crate::api::owner::Faction::{BLUE, GREEN, RED};
 use crate::api::world_map_type::WorldMapType;
-use std::os::raw::c_void;
-use std::ptr;
-use std::ptr::{null, null_mut};
 use std::rc::Rc;
-use imgui_glium_renderer::imgui::Textures;
-use imgui_glium_renderer::Texture;
-use serde::de::Error;
-use crate::icons::Icon;
 use crate::icons::Icon::ObjectiveCastle;
 
 #[cfg(windows)]
@@ -44,20 +37,26 @@ static mut AAAA: Option<ImGuiIcon> = None;
 
 
 #[cfg(not(windows))]
-pub fn nithanim_setup(device: GfxDevice, textures: &mut Textures<Texture>) {
-    nithanim_setup_internal(device);
+pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::imgui::Textures<imgui_glium_renderer::Texture>) {
+    let x1 = |x: imgui_glium_renderer::Texture| {
+        textures.insert(x)
+    };
+    nithanim_setup_internal(device, x1);
 }
+
 #[cfg(windows)]
 #[no_mangle]
 pub extern "C" fn nithanim_setup(device: GfxDevice) {
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
 
-    nithanim_setup_internal(device);
+    nithanim_setup_internal(device, ());
 }
 
 
-fn nithanim_setup_internal(device: GfxDevice) {
+fn nithanim_setup_internal<F>(device: GfxDevice, x1: F)
+    where
+        F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
 
@@ -65,7 +64,7 @@ fn nithanim_setup_internal(device: GfxDevice) {
     unsafe {
         MATCHUP = Some(matchup);
 
-        let result = load_icon(ObjectiveCastle, device);
+        let result = load_icon(ObjectiveCastle, device, x1);
         let ic = result.unwrap();
         AAAA = Some(ic);
     }
@@ -108,13 +107,13 @@ pub extern "C" fn nithanim_ui() {
         let available = igGetContentRegionAvail(&mut draw_area);
 
         let u = (&AAAA.as_ref()).unwrap();
-        let id = *u.to_imgui_id();
+        let id = u.to_imgui_id();
         igImage(
             id,
-            u.size, ImVec2::new(0f32, 0f32),
-            ImVec2::new(1f32, 1f32),
-            ImVec4::new(0f32, 0f32, 0f32, 0.5f32),
-            ImVec4::new(0f32, 0f32, 0f32, 0.5f32),
+            u.size, ImVec2::new(0.0, 0.0),
+            ImVec2::new(1.0, 1.0),
+            ImVec4::new(1.0, 1.0, 1.0, 1.0),
+            ImVec4::new(0.0, 0.0, 0.0, 0.0),
         );
 
 
@@ -124,10 +123,12 @@ pub extern "C" fn nithanim_ui() {
 }
 
 #[cfg(not(windows))]
-unsafe fn load_icon(icon: icons::Icon, device: GfxDevice) -> Result<ImGuiIcon, String> {
-    let iconData = icon.value();
-    let bytes: &[u8] = iconData.bytes.deref();
-    let raw_image = glium::texture::RawImage2d::from_raw_rgba_reversed(&bytes, (iconData.size.x as u32, iconData.size.y as u32));
+unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, mut x1: F) -> Result<ImGuiIcon, String>
+    where
+        F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
+    let icon_data = icon.value();
+    let bytes: &[u8] = icon_data.bytes.deref();
+    let raw_image = glium::texture::RawImage2d::from_raw_rgba(Vec::from(bytes), (icon_data.size.x as u32, icon_data.size.y as u32));
     let gl_texture = glium::Texture2d::new(device, raw_image).unwrap();
 
     let texture = imgui_glium_renderer::Texture {
@@ -141,13 +142,13 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice) -> Result<ImGuiIcon, S
 
     Ok(ImGuiIcon {
         size: icon.value().size,
-        texture: Rc::new(texture),
+        texture: x1(texture),
     })
 }
 
 
 #[cfg(windows)]
-unsafe fn load_icon(icon: icons::Icon, device: GfxDevice) -> Result<ImGuiIcon, String> {
+unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: ()) -> Result<ImGuiIcon, String> {
     let bytes: &[u8] = icon.value().bytes.deref();
 
 
@@ -210,19 +211,18 @@ pub struct ImGuiIcon {
     #[cfg(windows)]
     texture: *mut d3d11::ID3D11ShaderResourceView,
     #[cfg(not(windows))]
-    texture: Rc<imgui_glium_renderer::Texture>,
+    texture: imgui_glium_renderer::imgui::TextureId,
     size: ImVec2,
 }
 
 impl ImGuiIcon {
     #[cfg(windows)]
-    pub fn to_imgui_id(&self) -> *mut ImTextureID {
-        self.texture as *mut ImTextureID
+    pub fn to_imgui_id(&self) -> ImTextureID {
+        self.texture as ImTextureID
     }
     #[cfg(not(windows))]
-    pub fn to_imgui_id(&self) -> *mut ImTextureID {
-        let ptr = Rc::as_ptr(&self.texture);
-        ptr as *mut ImTextureID
+    pub fn to_imgui_id(&self) -> ImTextureID {
+        self.texture.id() as ImTextureID
     }
 }
 

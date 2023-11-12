@@ -49,7 +49,7 @@ fn main() {
             let mut target = display.draw();
 
             // Renderer doesn't automatically clear window
-            target.clear_color_srgb(1.0, 1.0, 1.0, 1.0);
+            target.clear_color_srgb(0.0, 0.0, 0.0, 1.0);
 
             // Perform rendering
             winit_platform.prepare_render(&ui, gl_window.window());

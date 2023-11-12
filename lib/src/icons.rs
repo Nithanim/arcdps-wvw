@@ -9,6 +9,7 @@ static OBJECTIVE_TOWER: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("..
 static OBJECTIVE_CAMP: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Camp.png")));
 static OBJECTIVE_SENTRY: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Castle.png")));
 
+#[derive(Eq, PartialEq, Hash, Clone, Copy)]
 pub enum Icon {
     ObjectiveCastle,
     ObjectiveKeep,

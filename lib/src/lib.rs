@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::iter::Map;
@@ -121,10 +122,10 @@ pub extern "C" fn nithanim_ui() {
 
 
         let mut pos = ImVec2::zero();
-        igGetCursorScreenPos(&mut pos);
-        //let draw_list = igGetWindowDrawList();
-        let mut draw_area = ImVec2::zero();
-        let available = igGetContentRegionAvail(&mut draw_area);
+        igGetCursorPos(&mut pos);
+        //println!("{}, {}", pos.x, pos.y);
+        let mut available_area = ImVec2::zero();
+        igGetContentRegionAvail(&mut available_area);
 
         let u = (&ICONS.as_ref()).unwrap();
         let uv0 = ImVec2::new(0.0, 0.0);
@@ -132,14 +133,44 @@ pub extern "C" fn nithanim_ui() {
         let tint_color = ImVec4::new(1.0, 1.0, 1.0, 1.0);
         let border_color = ImVec4::new(0.0, 0.0, 0.0, 0.0);
 
+        let min_x = single_map_objectives.iter()
+            .map(|c| c.coord)
+            .filter(|c| c.is_some())
+            .map(|c| c.unwrap()[0])
+            .reduce(f32::min).unwrap_or(0.0);
+        let max_x = single_map_objectives.iter()
+            .map(|c| c.coord)
+            .filter(|c| c.is_some())
+            .map(|c| c.unwrap()[0])
+            .reduce(f32::max).unwrap_or(0.0);
+        let min_y = single_map_objectives.iter()
+            .map(|c| c.coord)
+            .filter(|c| c.is_some())
+            .map(|c| c.unwrap()[1])
+            .reduce(f32::min).unwrap_or(0.0);
+        let max_y = single_map_objectives.iter()
+            .map(|c| c.coord)
+            .filter(|c| c.is_some())
+            .map(|c| c.unwrap()[1])
+            .reduce(f32::max).unwrap_or(0.0);
+
+        let icon_size = ImVec2::new(32f32, 32f32);
+        let map_size_x = max_x - min_x;
+        let map_size_y = max_y - min_y;
+
         for objective in single_map_objectives {
             let ic = match &objective.type_ {
                 objective_definition::Type::CAMP => Some(&icons::Icon::ObjectiveCamp),
-                objective_definition::Type::TOWER  => Some(&icons::Icon::ObjectiveTower),
-                 objective_definition::Type::KEEP =>  Some(&icons::Icon::ObjectiveKeep),
-                objective_definition::Type::CASTLE =>  Some(&icons::Icon::ObjectiveCastle),
+                objective_definition::Type::TOWER => Some(&icons::Icon::ObjectiveTower),
+                objective_definition::Type::KEEP => Some(&icons::Icon::ObjectiveKeep),
+                objective_definition::Type::CASTLE => Some(&icons::Icon::ObjectiveCastle),
                 _default => None,
-            }.map(|m|u.get(m).unwrap());
+            }.map(|m| u.get(m).unwrap());
+
+            let x = (objective.coord.unwrap()[0] - min_x) / map_size_x * (available_area.x - icon_size.x);
+            let y = (objective.coord.unwrap()[1] - min_y) / map_size_y * (available_area.y - icon_size.x);
+
+            igSetCursorPos(ImVec2::new(pos.x + x, pos.y + y));
 
             if ic.is_some() {
                 igImage(
@@ -152,8 +183,11 @@ pub extern "C" fn nithanim_ui() {
             }
         }
 
+        //igSetCursorPos(ImVec2::new(pos.x + available_area.x, pos.y + available_area.y));
+        igSetCursorPos(pos);
+        igDummy(ImVec2::new(available_area.x, available_area.y));
 
-        //igDummy(ImVec2::new(200f32, 200f32));
+        //igDummy(ImVec2::new(available_area.x, available_area.y));
         igEnd();
     }
 }

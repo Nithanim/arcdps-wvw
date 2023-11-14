@@ -1,7 +1,4 @@
-use std::cmp::min;
 use std::collections::HashMap;
-use std::ffi::{CStr, CString};
-use std::iter::Map;
 use std::ops::Deref;
 use imgui_sys::*;
 #[cfg(windows)]
@@ -18,7 +15,6 @@ use crate::api::owner::Faction;
 use crate::api::owner::Faction::{BLUE, GREEN, RED};
 use crate::api::world_map_type::WorldMapType;
 use std::rc::Rc;
-use crate::api::objective_definition;
 use crate::api::objective_definition::ObjectiveDefinition;
 
 #[cfg(windows)]
@@ -35,6 +31,7 @@ use winapi::{
 
 mod api;
 mod icons;
+mod map_renderer;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
@@ -107,88 +104,7 @@ fn get_home_world_faction(home_world: i32) -> Option<Faction> {
 #[no_mangle]
 pub extern "C" fn nithanim_ui() {
     unsafe {
-        igBegin(CString::new("WvW").unwrap().as_ptr(), &mut true, 0);
-        igText(CString::new("HELLO").unwrap().as_ptr());
-        igButton(CString::new("gfgdfg").unwrap().as_ptr(), ImVec2::new(200f32, 15f32));
-
-        let z = (&OBJECTIVES.as_ref()).unwrap();
-        let single_map_objectives: Vec<&ObjectiveDefinition> = z.iter()
-            .filter(|&f| f.map_type == "Center")
-            .filter(|&f| match &f.type_ {
-                objective_definition::Type::CAMP | objective_definition::Type::TOWER | objective_definition::Type::KEEP | objective_definition::Type::CASTLE => true,
-                _default => false
-            })
-            .collect();
-
-
-        let mut pos = ImVec2::zero();
-        igGetCursorPos(&mut pos);
-        //println!("{}, {}", pos.x, pos.y);
-        let mut available_area = ImVec2::zero();
-        igGetContentRegionAvail(&mut available_area);
-
-        let u = (&ICONS.as_ref()).unwrap();
-        let uv0 = ImVec2::new(0.0, 0.0);
-        let uv1 = ImVec2::new(1.0, 1.0);
-        let tint_color = ImVec4::new(1.0, 1.0, 1.0, 1.0);
-        let border_color = ImVec4::new(0.0, 0.0, 0.0, 0.0);
-
-        let min_x = single_map_objectives.iter()
-            .map(|c| c.coord)
-            .filter(|c| c.is_some())
-            .map(|c| c.unwrap()[0])
-            .reduce(f32::min).unwrap_or(0.0);
-        let max_x = single_map_objectives.iter()
-            .map(|c| c.coord)
-            .filter(|c| c.is_some())
-            .map(|c| c.unwrap()[0])
-            .reduce(f32::max).unwrap_or(0.0);
-        let min_y = single_map_objectives.iter()
-            .map(|c| c.coord)
-            .filter(|c| c.is_some())
-            .map(|c| c.unwrap()[1])
-            .reduce(f32::min).unwrap_or(0.0);
-        let max_y = single_map_objectives.iter()
-            .map(|c| c.coord)
-            .filter(|c| c.is_some())
-            .map(|c| c.unwrap()[1])
-            .reduce(f32::max).unwrap_or(0.0);
-
-        let icon_size = ImVec2::new(32f32, 32f32);
-        let map_size_x = max_x - min_x;
-        let map_size_y = max_y - min_y;
-
-        for objective in single_map_objectives {
-            let ic = match &objective.type_ {
-                objective_definition::Type::CAMP => Some(&icons::Icon::ObjectiveCamp),
-                objective_definition::Type::TOWER => Some(&icons::Icon::ObjectiveTower),
-                objective_definition::Type::KEEP => Some(&icons::Icon::ObjectiveKeep),
-                objective_definition::Type::CASTLE => Some(&icons::Icon::ObjectiveCastle),
-                _default => None,
-            }.map(|m| u.get(m).unwrap());
-
-            let x = (objective.coord.unwrap()[0] - min_x) / map_size_x * (available_area.x - icon_size.x);
-            let y = (objective.coord.unwrap()[1] - min_y) / map_size_y * (available_area.y - icon_size.x);
-
-            igSetCursorPos(ImVec2::new(pos.x + x, pos.y + y));
-
-            if ic.is_some() {
-                igImage(
-                    ic.unwrap().to_imgui_id(),
-                    ic.unwrap().size, uv0,
-                    uv1,
-                    tint_color,
-                    border_color,
-                );
-            }
-        }
-
-        //igSetCursorPos(ImVec2::new(pos.x + available_area.x, pos.y + available_area.y));
-        igSetCursorPos(pos);
-        igDummy(ImVec2::new(available_area.x, available_area.y));
-
-        //igDummy(ImVec2::new(available_area.x, available_area.y));
-        igEnd();
+        map_renderer::render_map((&OBJECTIVES.as_ref()).unwrap(), (&ICONS.as_ref()).unwrap(), (&MATCHUP.as_ref()).unwrap());
     }
 }
 

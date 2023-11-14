@@ -1,11 +1,11 @@
 use serde_derive::Deserialize;
 use crate::api::objective_definition::Type;
-use crate::api::owner::Faction;
+use crate::api::owner::OwningForce;
 
 #[derive(Deserialize, Debug)]
 pub struct Objective {
-    id: String,
-    owner: Faction,
+    pub id: String,
+    pub owner: OwningForce,
     #[serde(alias = "type")]
-    type_: Type,
+    pub type_: Type,
 }

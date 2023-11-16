@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use c_str_macro::c_str;
 use imgui_sys::*;
 use crate::api::objective_definition;
 use crate::api::objective_definition::ObjectiveDefinition;
@@ -38,9 +39,9 @@ pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<
 }
 
 pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, objectives: &HashMap<&String, &Objective>) {
-    igBegin(CString::new("WvW").unwrap().as_ptr(), &mut true, 0);
-    igText(CString::new("HELLO").unwrap().as_ptr());
-    igButton(CString::new("gfgdfg").unwrap().as_ptr(), ImVec2::new(200f32, 15f32));
+    igBegin(c_str!("WvW").as_ptr(), &mut true, 0);
+    igText(c_str!("HELLO").as_ptr());
+    igButton(c_str!("gfgdfg").as_ptr(), ImVec2::new(200f32, 15f32));
 
 
     let mut pos = ImVec2::zero();

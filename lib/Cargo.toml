@@ -24,3 +24,5 @@ once_cell = "1.18.0"
 # needed for linux
 glium = { version = "0.29.1", default-features = true }
 imgui-glium-renderer = "0.7.0"
+
+c_str_macro = "1.0.3"

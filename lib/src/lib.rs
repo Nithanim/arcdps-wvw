@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+#[cfg(windows)]
+use std::ffi::c_void;
 use std::ops::Deref;
 use imgui_sys::*;
 #[cfg(windows)]
@@ -18,7 +20,7 @@ use std::rc::Rc;
 use crate::api::objective_definition::ObjectiveDefinition;
 
 #[cfg(windows)]
-type GfxDevice = d3d11::ID3D11Device;
+type GfxDevice = *mut d3d11::ID3D11Device;
 #[cfg(not(windows))]
 type GfxDevice<'a> = &'a glium::Display;
 
@@ -50,13 +52,21 @@ pub extern "C" fn nithanim_setup(device: GfxDevice) {
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
 
-    nithanim_setup_internal(device, ());
+    nithanim_setup_internal(device, &mut ());
 }
 
+#[cfg(not(windows))]
+type TextureDataType = imgui_glium_renderer::Texture;
+#[cfg(windows)]
+type TextureDataType = ();
+#[cfg(not(windows))]
+type TextureIdType = imgui_glium_renderer::imgui::TextureId;
+#[cfg(windows)]
+type TextureIdType = ();
 
 fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
     where
-        F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
+        F: FnMut(TextureDataType) -> TextureIdType {
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
 
@@ -134,7 +144,7 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &m
 
 
 #[cfg(windows)]
-unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: ()) -> Result<ImGuiIcon, String> {
+unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: &mut ()) -> Result<ImGuiIcon, String> {
     let bytes: &[u8] = icon.value().bytes.deref();
 
 
@@ -162,7 +172,7 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: ()) -> Result<ImGui
     };
 
 
-    let mut pTexture: *mut d3d11::ID3D11Texture2D = ptr::null_mut();
+    let mut pTexture: *mut d3d11::ID3D11Texture2D = core::ptr::null_mut();
     let create_texture2dres = device.CreateTexture2D(&desc, &sub_resource, &mut pTexture);
 
     if !create_texture2dres {
@@ -182,7 +192,7 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: ()) -> Result<ImGui
         u: srvDescTexture,
     };
 
-    let mut d11texture: *mut d3d11::ID3D11ShaderResourceView = ptr::null_mut();
+    let mut d11texture: *mut d3d11::ID3D11ShaderResourceView = core::ptr::null_mut();
     device.CreateShaderResourceView(pTexture as *mut d3d11::ID3D11Resource, &srvDesc, &mut d11texture);
 
     pTexture.Release();

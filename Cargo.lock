@@ -43,6 +43,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "000444226fcff248f2bc4c7625be32c63caccfecc2723a2b9f78a7487a49c407"
 
 [[package]]
+name = "arcdps_wvw"
+version = "0.1.0"
+dependencies = [
+ "c_str_macro",
+ "glium",
+ "image",
+ "imgui-glium-renderer",
+ "imgui-sys",
+ "once_cell",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "winapi 0.3.9",
+]
+
+[[package]]
+name = "arcdps_wvw_exe"
+version = "0.1.0"
+dependencies = [
+ "arcdps_wvw",
+ "glium",
+ "imgui",
+ "imgui-glium-renderer",
+ "imgui-winit-support",
+ "winit",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -682,34 +710,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22ae881a42852470216c77fba5835b9701815adac24dfaa8d4ebf3a368376756"
 dependencies = [
  "imgui",
- "winit",
-]
-
-[[package]]
-name = "imgui_wvw"
-version = "0.1.0"
-dependencies = [
- "c_str_macro",
- "glium",
- "image",
- "imgui-glium-renderer",
- "imgui-sys",
- "once_cell",
- "serde",
- "serde_derive",
- "serde_json",
- "winapi 0.3.9",
-]
-
-[[package]]
-name = "imgui_wvw_exe"
-version = "0.1.0"
-dependencies = [
- "glium",
- "imgui",
- "imgui-glium-renderer",
- "imgui-winit-support",
- "imgui_wvw",
  "winit",
 ]
 

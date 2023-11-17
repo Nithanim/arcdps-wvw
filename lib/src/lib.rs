@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-#[cfg(windows)]
-use std::ffi::c_void;
 use std::ops::Deref;
 use imgui_sys::*;
 #[cfg(windows)]
@@ -16,11 +14,13 @@ use crate::api::matchup::Matchup;
 use crate::api::owner::Faction;
 use crate::api::owner::Faction::{BLUE, GREEN, RED};
 use crate::api::world_map_type::WorldMapType;
-use std::rc::Rc;
 use crate::api::objective_definition::ObjectiveDefinition;
 
 #[cfg(windows)]
-type GfxDevice = *mut d3d11::ID3D11Device;
+mod integration;
+
+#[cfg(windows)]
+type GfxDevice = *const d3d11::ID3D11Device;
 #[cfg(not(windows))]
 type GfxDevice<'a> = &'a glium::Display;
 
@@ -46,15 +46,6 @@ pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::im
     nithanim_setup_internal(device, &mut f);
 }
 
-#[cfg(windows)]
-#[no_mangle]
-pub extern "C" fn nithanim_setup(device: GfxDevice) {
-    //imgui_sys::igSetCurrentContext()
-    //imgui_sys::igSetAllocatorFunctions()
-
-    nithanim_setup_internal(device, &mut ());
-}
-
 #[cfg(not(windows))]
 type TextureDataType = imgui_glium_renderer::Texture;
 #[cfg(windows)]
@@ -64,7 +55,7 @@ type TextureIdType = imgui_glium_renderer::imgui::TextureId;
 #[cfg(windows)]
 type TextureIdType = ();
 
-fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
+pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
     where
         F: FnMut(TextureDataType) -> TextureIdType {
     //imgui_sys::igSetCurrentContext()
@@ -144,7 +135,10 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &m
 
 
 #[cfg(windows)]
-unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: &mut ()) -> Result<ImGuiIcon, String> {
+unsafe fn load_icon<F>(icon: icons::Icon, device: *const d3d11::ID3D11Device, f: &mut F) -> Result<ImGuiIcon, String>
+    where
+        F: FnMut(TextureDataType) -> TextureIdType {
+    let device = device.as_ref().unwrap();
     let bytes: &[u8] = icon.value().bytes.deref();
 
 
@@ -166,7 +160,7 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: &mut ()) -> Result<
     };
 
     let sub_resource = d3d11::D3D11_SUBRESOURCE_DATA {
-        pSysMem: bytes.as_ptr() as *const c_void,
+        pSysMem: bytes.as_ptr() as *const winapi::ctypes::c_void,
         SysMemPitch: desc.Width * 4,
         SysMemSlicePitch: 0,
     };
@@ -175,7 +169,7 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: &mut ()) -> Result<
     let mut pTexture: *mut d3d11::ID3D11Texture2D = core::ptr::null_mut();
     let create_texture2dres = device.CreateTexture2D(&desc, &sub_resource, &mut pTexture);
 
-    if !create_texture2dres {
+    if create_texture2dres != winapi::shared::winerror::S_OK {
         panic!("Error creating 2d texture: ");
     }
 
@@ -195,7 +189,7 @@ unsafe fn load_icon(icon: icons::Icon, device: GfxDevice, f: &mut ()) -> Result<
     let mut d11texture: *mut d3d11::ID3D11ShaderResourceView = core::ptr::null_mut();
     device.CreateShaderResourceView(pTexture as *mut d3d11::ID3D11Resource, &srvDesc, &mut d11texture);
 
-    pTexture.Release();
+    pTexture.as_ref().unwrap().Release();
 
     return Ok(ImGuiIcon {
         size: icon.value().size,

@@ -1,7 +1,7 @@
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Surface;
-use imgui_wvw::{nithanim_setup, nithanim_ui};
+use arcdps_wvw::{nithanim_setup, nithanim_ui};
 
 const TITLE: &str = "Hello, imgui-rs!";
 

@@ -1,5 +1,5 @@
 [package]
-name = "imgui_wvw_exe"
+name = "arcdps_wvw_exe"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 
-imgui_wvw = {path = "../lib"}
+arcdps_wvw = {path = "../lib"}
 imgui = "0.7.0"
 #imgui-winit = { version = "0.1.2"}
 imgui-winit-support = { version = "0.7.0" }

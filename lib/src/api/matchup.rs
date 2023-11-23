@@ -1,4 +1,3 @@
-use std::iter::Map;
 use serde_derive::Deserialize;
 use crate::api::world_map::WorldMap;
 

@@ -144,8 +144,8 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: *const d3d11::ID3D11Device, f:
 
     // https://github.com/knoxfighter/arcdps-extension/blob/ef878f37307ff4bc95289623389a6e01521d7a12/Icon.cpp#L213C28-L213C28
     let desc = d3d11::D3D11_TEXTURE2D_DESC {
-        Width: 32,
-        Height: 32,
+        Width: icon.value().size.x as u32,
+        Height: icon.value().size.y as u32,
         MipLevels: 1,
         ArraySize: 1,
         Format: DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -153,7 +153,7 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: *const d3d11::ID3D11Device, f:
             Count: 1,
             Quality: 0,
         },
-        Usage: d3d11::D3D11_USAGE_DEFAULT,
+        Usage: d3d11::D3D11_USAGE_IMMUTABLE,
         BindFlags: d3d11::D3D11_BIND_SHADER_RESOURCE,
         CPUAccessFlags: 0,
         MiscFlags: 0,
@@ -170,7 +170,7 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: *const d3d11::ID3D11Device, f:
     let create_texture2dres = device.CreateTexture2D(&desc, &sub_resource, &mut pTexture);
 
     if create_texture2dres != winapi::shared::winerror::S_OK {
-        panic!("Error creating 2d texture: ");
+        panic!("Error creating 2d texture: 0x{:08x}", create_texture2dres);
     }
 
     let mut srvDescTexture: d3d11::D3D11_SHADER_RESOURCE_VIEW_DESC_u = std::mem::zeroed();

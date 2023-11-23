@@ -1,7 +1,5 @@
-use std::ffi::{c_char, c_void, CStr, CString};
-use std::mem::size_of;
+use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
-use c_str_macro::c_str;
 #[cfg(windows)]
 use winapi::shared::minwindef::{LPARAM, UINT, WPARAM};
 #[cfg(windows)]
@@ -12,14 +10,15 @@ static mut filelog: *mut c_void = null_mut();
 
 const EXT_NAME: &CStr = unsafe { CStr::from_bytes_with_nul_unchecked(b"WvW Display\0") };
 const EXT_VERSION: &CStr = unsafe { CStr::from_bytes_with_nul_unchecked(b"0.1\0") };
-pub static mut arc_exports_static: arcdps_exports = arcdps_exports {
-    sig: 0xFFFA, // If extension should not be loaded, set to 0
+
+pub static mut ARC_EXPORTS_STATIC: arcdps_exports = arcdps_exports {
+    sig: 0xF3D01609, // If extension should not be loaded, set to 0
     imguivers: 18000,
-    size: size_of::<arcdps_exports>(),
+    size: std::mem::size_of::<arcdps_exports>(),
     out_name: EXT_NAME.as_ptr(),
     out_build: EXT_VERSION.as_ptr(),
-    combat: mod_combat as *const c_void,
-    wnd_nofilter: mod_wnd as *const c_void,
+    combat: null(), // mod_combat as *const c_void,
+    wnd_nofilter: null(), //mod_wnd as *const c_void,
     imgui: mod_imgui as *const c_void,
     options_end: null(),
     combat_local: null(),
@@ -36,7 +35,8 @@ pub unsafe extern "C" fn mod_combat(ev: *mut cbtevent, src: *mut ag, dst: *mut a
 #[no_mangle]
 pub unsafe extern "C" fn mod_imgui(pNotCharSelectionOrLoading: u32, pHideIfCombatOrOoc: u32) -> usize
 {
-    if (pNotCharSelectionOrLoading == 0 || pHideIfCombatOrOoc != 0)
+    crate::nithanim_ui();
+    if pNotCharSelectionOrLoading == 0 || pHideIfCombatOrOoc != 0
     {
         return 0;
     }

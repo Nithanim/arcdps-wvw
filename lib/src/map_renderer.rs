@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::ffi::CString;
+use std::time::Instant;
 use c_str_macro::c_str;
 use imgui_sys::*;
 use crate::api::objective_definition;
@@ -7,33 +9,75 @@ use crate::{icons, ImGuiIcon};
 use crate::api::matchup::Matchup;
 use crate::api::objective::Objective;
 use crate::api::owner::OwningForce;
+use crate::data::SharedData;
 
 
-pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, matchup: &Matchup) {
+pub unsafe fn render_map<'a>(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&'a SharedData>) {
     const MAP: &str = "Center";
-    let single_map_objectives: Vec<&ObjectiveDefinition> = objectives.iter()
+    let single_map_objective_definitions: Vec<&ObjectiveDefinition> = objectives.iter()
         .filter(|&e| e.map_type == MAP)
         .filter(|&e| match &e.type_ {
             objective_definition::Type::CAMP | objective_definition::Type::TOWER | objective_definition::Type::KEEP | objective_definition::Type::CASTLE => true,
             _default => false
         })
         .collect();
-    let objective_states = matchup.maps.iter()
-        .filter(|e| e.type_ == "Center")
-        .flat_map(|e| &e.objectives)
-        .map(|e| (&e.id, e))
-        .collect();
 
+    let matchup_opt: Option<Result<&Matchup, &()>>;
+    if shared_data.is_none() {
+        matchup_opt = None;
+    } else {
+        let x: &'a SharedData = shared_data.unwrap();
+        let result = x.matchup.as_ref();
+        matchup_opt = Some(result);
+    }
 
-    render_map_(&single_map_objectives, icons, &objective_states);
+    let matchup: Option<&Matchup>;
+    if matchup_opt.is_none() {
+        matchup = None;
+    } else {
+        let e = matchup_opt.unwrap();
+        if e.is_err() {
+            matchup = None;
+        } else {
+            matchup = e.ok();
+        }
+    }
+
+    let objective_states: HashMap<&String, &Objective>;
+    if matchup.is_some() {
+        objective_states = matchup.as_ref().unwrap().maps.iter()
+            .filter(|e| e.type_ == MAP)
+            .flat_map(|e| &e.objectives)
+            .map(|e| (&e.id, e))
+            .collect();
+    } else {
+        objective_states = HashMap::new();
+    }
+
+    igBegin(c_str!("WvW").as_ptr(), &mut true, 0);
+
+    let text: String;
+    if shared_data.is_some() {
+        let data_timestamp = shared_data.unwrap().timestamp;
+        let now = Instant::now();
+
+        let diff = now.duration_since(data_timestamp);
+
+        text = format!("Last update: {} sec", diff.as_secs());
+    } else {
+        text = String::from("No data");
+    }
+    let string = CString::new(text).unwrap();
+    igText(string.as_ptr());
+
+    render_map_(&single_map_objective_definitions, icons, &objective_states);
+
+    igEnd();
 }
 
-pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, objectives: &HashMap<&String, &Objective>) {
-    igBegin(c_str!("WvW").as_ptr(), &mut true, 0);
-    igText(c_str!("HELLO").as_ptr());
-    igButton(c_str!("gfgdfg").as_ptr(), ImVec2::new(200f32, 15f32));
-
-
+pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>,
+                          icons: &HashMap<icons::Icon, ImGuiIcon>,
+                          objectives: &HashMap<&String, &Objective>) {
     let mut pos = ImVec2::zero();
     igGetCursorPos(&mut pos);
     //println!("{}, {}", pos.x, pos.y);
@@ -82,7 +126,6 @@ pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>, ico
     igDummy(ImVec2::new(available_area.x, available_area.y));
 
     //igDummy(ImVec2::new(available_area.x, available_area.y));
-    igEnd();
 }
 
 unsafe fn get_owning_force_tint_objective(objective_live: &Option<&&Objective>) -> ImVec4 {

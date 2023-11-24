@@ -21,6 +21,7 @@ type GfxDevice<'a> = &'a glium::Display;
 mod api;
 mod icons;
 mod map_renderer;
+mod data;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
@@ -35,7 +36,7 @@ pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::im
 
 
 use integration::{
-    TextureIdType, TextureDataType
+    TextureIdType, TextureDataType,
 };
 
 pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
@@ -43,6 +44,8 @@ pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mu
         F: FnMut(TextureDataType) -> TextureIdType {
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
+
+    data::init();
 
     let matchup: Matchup = serde_json::from_str(include_str!("../resources/cache/matchup.json")).unwrap();
     let objectives: Vec<ObjectiveDefinition> = serde_json::from_str(include_str!("../resources/cache/objectives.json")).unwrap();
@@ -87,8 +90,15 @@ fn get_home_world_faction(home_world: i32) -> Option<Faction> {
 
 #[no_mangle]
 pub extern "C" fn nithanim_ui() {
+    let lock_result = data::DATA.lock();
+    let mutex = lock_result.unwrap();
+    let data = mutex.as_ref();
+
     unsafe {
-        map_renderer::render_map((&OBJECTIVES.as_ref()).unwrap(), (&ICONS.as_ref()).unwrap(), (&MATCHUP.as_ref()).unwrap());
+        map_renderer::render_map(
+            (&OBJECTIVES.as_ref()).unwrap(),
+            (&ICONS.as_ref()).unwrap(),
+            data);
     }
 }
 

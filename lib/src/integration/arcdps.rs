@@ -1,9 +1,5 @@
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
-#[cfg(windows)]
-use winapi::shared::minwindef::{LPARAM, UINT, WPARAM};
-#[cfg(windows)]
-use winapi::shared::windef::HWND;
 
 static mut filelog: *mut c_void = null_mut();
 
@@ -44,12 +40,6 @@ pub unsafe extern "C" fn mod_imgui(pNotCharSelectionOrLoading: u32, pHideIfComba
 }
 
 
-// Should really be in "windows" but then it cant be referenced correctly (for now)
-#[cfg(windows)]
-#[no_mangle]
-pub unsafe extern "C" fn mod_wnd(hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM) -> usize {
-    return uMsg as usize;
-}
 
 // TODO quick-fix to dummy because on the linux-tester, we never call it
 // but this will explode on a windows-test tool!

@@ -20,7 +20,12 @@ pub enum Icon {
 
 pub struct IconData {
     pub bytes: Vec<u8>,
-    pub size: ImVec2,
+    pub size: Size,
+}
+
+pub struct Size {
+    pub w: u32,
+    pub h: u32,
 }
 
 impl Icon {
@@ -39,6 +44,9 @@ fn to_data(file: &[u8]) -> IconData {
     let img = image::load_from_memory(file).unwrap();
     IconData {
         bytes: img.to_rgba8().into_raw(),
-        size: ImVec2::new(img.width() as f32, img.height() as f32),
+        size: Size {
+            w: img.width(),
+            h: img.height(),
+        },
     }
 }

@@ -1,15 +1,21 @@
 use std::collections::HashMap;
+use std::ffi::c_void;
+use std::mem::transmute;
 use std::ops::Deref;
+#[cfg(not(windows))]
+use std::rc::Rc;
 use imgui_sys::*;
 #[cfg(windows)]
-use winapi::{
-    shared::{
-        dxgiformat::DXGI_FORMAT_B8G8R8A8_UNORM,
-        dxgitype::DXGI_SAMPLE_DESC,
-    },
-    um::d3d11,
-    um::d3dcommon,
-};
+use windows::Win32::Graphics::Direct3D11;
+#[cfg(windows)]
+use windows::Win32::Graphics::Direct3D11::{D3D11_SHADER_RESOURCE_VIEW_DESC_0, D3D11_TEX2D_SRV};
+#[cfg(windows)]
+use windows::Win32::Graphics::Direct3D::D3D11_SRV_DIMENSION_TEXTURE2D;
+#[cfg(windows)]
+use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
+use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_R8G8B8A8_UNORM;
+#[cfg(windows)]
+use windows::Win32::Graphics::Dxgi::Common::DXGI_SAMPLE_DESC;
 use crate::api::matchup::Matchup;
 use crate::api::owner::Faction;
 use crate::api::owner::Faction::{BLUE, GREEN, RED};
@@ -20,7 +26,7 @@ use crate::api::objective_definition::ObjectiveDefinition;
 mod integration;
 
 #[cfg(windows)]
-type GfxDevice = *const d3d11::ID3D11Device;
+type GfxDevice = *const Direct3D11::ID3D11Device;
 #[cfg(not(windows))]
 type GfxDevice<'a> = &'a glium::Display;
 
@@ -115,7 +121,7 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &m
         F: FnMut(imgui_glium_renderer::Texture) -> imgui_glium_renderer::imgui::TextureId {
     let icon_data = icon.value();
     let bytes: &[u8] = icon_data.bytes.deref();
-    let raw_image = glium::texture::RawImage2d::from_raw_rgba(Vec::from(bytes), (icon_data.size.x as u32, icon_data.size.y as u32));
+    let raw_image = glium::texture::RawImage2d::from_raw_rgba(Vec::from(bytes), (icon_data.size.w, icon_data.size.h));
     let gl_texture = glium::Texture2d::new(device, raw_image).unwrap();
 
     let texture = imgui_glium_renderer::Texture {
@@ -128,78 +134,92 @@ unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &m
     };
 
     Ok(ImGuiIcon {
-        size: icon.value().size,
+        size: ImVec2::new(icon.value().size.w as f32, icon.value().size.h as f32),
         texture: imgui_converter(texture),
     })
 }
 
 
 #[cfg(windows)]
-unsafe fn load_icon<F>(icon: icons::Icon, device: *const d3d11::ID3D11Device, f: &mut F) -> Result<ImGuiIcon, String>
+unsafe fn load_icon<F>(icon: icons::Icon, device: *const Direct3D11::ID3D11Device, f: &mut F) -> Result<ImGuiIcon, String>
     where
         F: FnMut(TextureDataType) -> TextureIdType {
     let device = device.as_ref().unwrap();
     let bytes: &[u8] = icon.value().bytes.deref();
 
+    let format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     // https://github.com/knoxfighter/arcdps-extension/blob/ef878f37307ff4bc95289623389a6e01521d7a12/Icon.cpp#L213C28-L213C28
-    let desc = d3d11::D3D11_TEXTURE2D_DESC {
-        Width: icon.value().size.x as u32,
-        Height: icon.value().size.y as u32,
+    let desc = Direct3D11::D3D11_TEXTURE2D_DESC {
+        Width: icon.value().size.w,
+        Height: icon.value().size.h,
         MipLevels: 1,
         ArraySize: 1,
-        Format: DXGI_FORMAT_B8G8R8A8_UNORM,
+        Format: format,
         SampleDesc: DXGI_SAMPLE_DESC {
             Count: 1,
             Quality: 0,
         },
-        Usage: d3d11::D3D11_USAGE_IMMUTABLE,
-        BindFlags: d3d11::D3D11_BIND_SHADER_RESOURCE,
-        CPUAccessFlags: 0,
-        MiscFlags: 0,
+        Usage: Direct3D11::D3D11_USAGE_IMMUTABLE,
+        BindFlags: Direct3D11::D3D11_BIND_SHADER_RESOURCE,
+        ..Default::default()
     };
 
-    let sub_resource = d3d11::D3D11_SUBRESOURCE_DATA {
-        pSysMem: bytes.as_ptr() as *const winapi::ctypes::c_void,
+    let sub_resource = Direct3D11::D3D11_SUBRESOURCE_DATA {
+        pSysMem: bytes.as_ptr() as *const c_void,
         SysMemPitch: desc.Width * 4,
         SysMemSlicePitch: 0,
     };
 
 
-    let mut pTexture: *mut d3d11::ID3D11Texture2D = core::ptr::null_mut();
-    let create_texture2dres = device.CreateTexture2D(&desc, &sub_resource, &mut pTexture);
+    let mut pTexture: Option<Direct3D11::ID3D11Texture2D> = None;
+    let create_texture2dres = device.CreateTexture2D(
+        &desc,
+        Some(&sub_resource),
+        Some(&mut pTexture),
+    );
 
-    if create_texture2dres != winapi::shared::winerror::S_OK {
-        panic!("Error creating 2d texture: 0x{:08x}", create_texture2dres);
+    if create_texture2dres.is_err() {
+        panic!("Error creating 2d texture!");
+    }
+    if pTexture.is_none() {
+        panic!("WTF1??");
     }
 
-    let mut srvDescTexture: d3d11::D3D11_SHADER_RESOURCE_VIEW_DESC_u = std::mem::zeroed();
-    *(srvDescTexture.Texture2D_mut()) = d3d11::D3D11_TEX2D_SRV {
-        MipLevels: desc.MipLevels, // Assuming `desc` is available and contains MipLevels
-        MostDetailedMip: 0,
-        ..*srvDescTexture.Texture2D_mut()
+    let srvDescTexture = Direct3D11::D3D11_SHADER_RESOURCE_VIEW_DESC {
+        Format: format,
+        ViewDimension: D3D11_SRV_DIMENSION_TEXTURE2D,
+        Anonymous: D3D11_SHADER_RESOURCE_VIEW_DESC_0 {
+            Texture2D: D3D11_TEX2D_SRV {
+                MipLevels: 1,
+                MostDetailedMip: 0,
+            }
+        },
     };
 
-    let srvDesc = d3d11::D3D11_SHADER_RESOURCE_VIEW_DESC {
-        Format: DXGI_FORMAT_B8G8R8A8_UNORM,
-        ViewDimension: d3dcommon::D3D11_SRV_DIMENSION_TEXTURE2D,
-        u: srvDescTexture,
-    };
+    let pTexture = pTexture.unwrap();
 
-    let mut d11texture: *mut d3d11::ID3D11ShaderResourceView = core::ptr::null_mut();
-    device.CreateShaderResourceView(pTexture as *mut d3d11::ID3D11Resource, &srvDesc, &mut d11texture);
+    let mut d11texture: Option<Direct3D11::ID3D11ShaderResourceView> = None;
+    let v = device.CreateShaderResourceView(&pTexture, Some(&srvDescTexture), Some(&mut d11texture));
 
-    pTexture.as_ref().unwrap().Release();
+    if v.is_err() {
+        panic!("Error creating 2d texture!");
+    }
+    if d11texture.is_none() {
+        panic!("WTF4??????");
+    }
+
+    //pTexture.as_ref().unwrap().Release();
 
     return Ok(ImGuiIcon {
-        size: icon.value().size,
-        texture: d11texture,
+        size: ImVec2::new(icon.value().size.w as f32, icon.value().size.h as f32),
+        texture: d11texture.unwrap(),
     });
 }
 
 pub struct ImGuiIcon {
     #[cfg(windows)]
-    texture: *mut d3d11::ID3D11ShaderResourceView,
+    texture: Direct3D11::ID3D11ShaderResourceView,
     #[cfg(not(windows))]
     texture: imgui_glium_renderer::imgui::TextureId,
     size: ImVec2,
@@ -208,7 +228,10 @@ pub struct ImGuiIcon {
 impl ImGuiIcon {
     #[cfg(windows)]
     pub fn to_imgui_id(&self) -> ImTextureID {
-        self.texture as ImTextureID
+        unsafe {
+            let a: *const c_void = *transmute::<_, &*const c_void>(&self.texture);
+            a as ImTextureID
+        }
     }
     #[cfg(not(windows))]
     pub fn to_imgui_id(&self) -> ImTextureID {
@@ -223,12 +246,6 @@ impl Into<ImTextureID> for ImGuiIcon {
     }
 }
 
-#[cfg(windows)]
-impl Into<ImTextureID> for ImGuiIcon {
-    fn into(self) -> ImTextureID {
-        self.texture as ImTextureID
-    }
-}
 
 
 

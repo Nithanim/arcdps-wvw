@@ -98,8 +98,9 @@ pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>, ico
         igSetCursorPos(ImVec2::new(pos.x + x, pos.y + y));
 
         if objective_icon.is_some() {
+            let x1 = objective_icon.unwrap();
             igImage(
-                objective_icon.unwrap().to_imgui_id(),
+                x1.to_imgui_id(),
                 objective_icon.unwrap().size, uv0,
                 uv1,
                 tint,

@@ -1,13 +1,18 @@
+pub mod icon_loader;
+
 use std::ffi::{c_char, c_void};
 use std::ptr::{null_mut};
 use imgui_sys::{igSetAllocatorFunctions, igSetCurrentContext, ImGuiContext};
 use windows::Win32::Graphics::Direct3D11::ID3D11Device;
 use windows::Win32::Graphics::Dxgi::IDXGISwapChain;
 use windows::Win32::Foundation::HMODULE;
-use crate::GfxDevice;
-//use winapi::um::wincon::FreeConsole;
 
 use crate::integration::arcdps::*;
+
+pub use icon_loader::load_icon;
+
+pub type TextureDataType = ();
+pub type TextureIdType = ();
 
 static mut filelog: *mut c_void = null_mut();
 

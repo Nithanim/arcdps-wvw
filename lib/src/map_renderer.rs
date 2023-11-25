@@ -12,7 +12,7 @@ use crate::api::owner::OwningForce;
 use crate::data::SharedData;
 
 
-pub unsafe fn render_map<'a>(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&'a SharedData>) {
+pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>) {
     const MAP: &str = "Center";
     let single_map_objective_definitions: Vec<&ObjectiveDefinition> = objectives.iter()
         .filter(|&e| e.map_type == MAP)
@@ -26,7 +26,7 @@ pub unsafe fn render_map<'a>(objectives: &Vec<ObjectiveDefinition>, icons: &Hash
     if shared_data.is_none() {
         matchup_opt = None;
     } else {
-        let x: &'a SharedData = shared_data.unwrap();
+        let x: &SharedData = shared_data.unwrap();
         let result = x.matchup.as_ref();
         matchup_opt = Some(result);
     }

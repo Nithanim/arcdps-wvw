@@ -19,7 +19,8 @@ and you have to have the mingw64 cross-compiler installed.
 You can then create the dll via
 `cargo build --target x86_64-pc-windows-gnu`
 
-Warning: for some dumb reason, the dll depends on `libstdc++-6.dll` and `libgcc_s_seh-1.dll`.
+Warning: for some dumb reason, `imgui-sys` needs `rustc-link-lib=stdc++`.
+So the resulting dll depends on `libstdc++-6.dll` and `libgcc_s_seh-1.dll`.
 Find and copy them from the mingw64 files and place them alongside the dll in the game dir.
 
 

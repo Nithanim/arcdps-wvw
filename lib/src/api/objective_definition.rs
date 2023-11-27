@@ -3,6 +3,7 @@ use serde_derive::Deserialize;
 #[derive(Deserialize, Debug)]
 pub struct ObjectiveDefinition {
     pub id: String,
+    pub name: String,
     #[serde(alias = "type")]
     pub type_: Type,
     pub map_id: i32,

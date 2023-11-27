@@ -23,7 +23,6 @@ pub fn init() {
             if matchup.is_err() {
                 eprintln!("Error updating data! {}", matchup.unwrap_err());
             } else {
-                println!("Update data!");
                 let new_data = SharedData {
                     matchup: matchup.map_err(|_| ()),
                     timestamp: Instant::now(),

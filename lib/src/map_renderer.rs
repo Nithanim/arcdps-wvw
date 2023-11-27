@@ -118,6 +118,13 @@ pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>,
                 tint,
                 border_color,
             );
+
+            if igIsItemHovered(ImGuiHoveredFlags_None as ImGuiHoveredFlags) {
+                igBeginTooltip();
+                let string = CString::new(objective_def.name.as_str()).unwrap();
+                igText(string.as_ptr());
+                igEndTooltip();
+            }
         }
     }
 

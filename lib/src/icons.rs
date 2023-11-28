@@ -1,13 +1,13 @@
 use std::ops::Deref;
-use imgui_sys::ImVec2;
 use once_cell::sync::Lazy;
+use crate::images::{ImageData, load_image_file};
 
 
-static OBJECTIVE_CASTLE: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Castle.png")));
-static OBJECTIVE_KEEP: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Keep.png")));
-static OBJECTIVE_TOWER: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Tower.png")));
-static OBJECTIVE_CAMP: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Camp.png")));
-static OBJECTIVE_SENTRY: Lazy<IconData> = Lazy::new(|| to_data(include_bytes!("../resources/icons/Objective_Castle.png")));
+static OBJECTIVE_CASTLE: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Castle.png")));
+static OBJECTIVE_KEEP: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Keep.png")));
+static OBJECTIVE_TOWER: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Tower.png")));
+static OBJECTIVE_CAMP: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Camp.png")));
+static OBJECTIVE_SENTRY: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Castle.png")));
 
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
 pub enum Icon {
@@ -18,18 +18,8 @@ pub enum Icon {
     ObjectiveSentry,
 }
 
-pub struct IconData {
-    pub bytes: Vec<u8>,
-    pub size: Size,
-}
-
-pub struct Size {
-    pub w: u32,
-    pub h: u32,
-}
-
 impl Icon {
-    pub fn value(&self) -> &IconData {
+    pub fn value(&self) -> &ImageData {
         match *self {
             Icon::ObjectiveCastle => OBJECTIVE_CASTLE.deref(),
             Icon::ObjectiveKeep => OBJECTIVE_KEEP.deref(),
@@ -40,13 +30,3 @@ impl Icon {
     }
 }
 
-fn to_data(file: &[u8]) -> IconData {
-    let img = image::load_from_memory(file).unwrap();
-    IconData {
-        bytes: img.to_rgba8().into_raw(),
-        size: Size {
-            w: img.width(),
-            h: img.height(),
-        },
-    }
-}

@@ -11,8 +11,7 @@ use crate::api::objective::Objective;
 use crate::api::owner::OwningForce;
 use crate::data::SharedData;
 
-
-pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>) {
+pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>) {
     const MAP: &str = "Center";
     let single_map_objective_definitions: Vec<&ObjectiveDefinition> = objectives.iter()
         .filter(|&e| e.map_type == MAP)

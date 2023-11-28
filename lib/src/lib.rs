@@ -22,6 +22,7 @@ mod api;
 mod icons;
 mod map_renderer;
 mod data;
+mod images;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
@@ -95,7 +96,7 @@ pub extern "C" fn nithanim_ui() {
     let data = mutex.as_ref();
 
     unsafe {
-        map_renderer::render_map(
+        map_renderer::render(
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data);

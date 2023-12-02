@@ -1,0 +1,82 @@
+use std::ops::Div;
+use c_str_macro::c_str;
+use imgui_sys::*;
+use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader, MumbleLinkReader, Position};
+use nalgebra::{Isometry3, Perspective3, Point2, Point3, Vector3, Vector4};
+use nalgebra as na;
+use crate::mumble::{GuildwarsContext, MumbleLinkIdentity};
+use crate::MUMBLE_LINK;
+
+const window_flags: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
+    | ImGuiWindowFlags_NoInputs
+    | ImGuiWindowFlags_NoNav
+    | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
+
+pub unsafe fn render() {
+    igSetNextWindowPos(ImVec2::new(0f32, 0f32), 0, ImVec2::zero());
+    let mut v: ImVec2 = ImVec2::new(1920.0, 1080.0);
+    igSetNextWindowSize(v, 0);
+
+    igBegin(c_str!("Full").as_ptr(), &mut true, 0 as ImGuiWindowFlags);
+
+    // position: [478.8522, 41.259987, -805.55994]
+
+
+    let handler = MUMBLE_LINK.as_ref();
+    if handler.is_some() {
+        let linked_memory = handler.unwrap().read().unwrap();
+
+        do_magic(linked_memory);
+    }
+
+
+    //up is (0, 1, 0)
+
+    igEnd();
+}
+
+unsafe fn do_magic(ml: MumbleLinkData) {
+    //let gw2context = ml.read_context_into_struct::<GuildwarsContext>();
+    let yfov = if ml.identity.len() > 5 {
+        serde_json::from_str::<MumbleLinkIdentity>(ml.identity.as_str()).map(|e| e.fov).unwrap_or(1.222)
+    } else {
+        1.222
+    };
+
+    let window_w = 1920.0;
+    let window_h = 1080.0;
+
+    let target = Point3::new(-62.843487, 23.980408, 229.41426);
+
+    let camera_pos: Point3<f32> = Point3::new(ml.camera.position[0], ml.camera.position[1], ml.camera.position[2]);
+    let camera_vec: Vector3<f32> = Vector3::new(ml.camera.front[0], ml.camera.front[1], ml.camera.front[2]);
+    let camera_target: Point3<f32> = camera_pos + camera_vec;
+
+    let model = Isometry3::new(Vector3::new(0.0, 0.0, 0.0), na::zero());
+
+    let view = Isometry3::look_at_rh(&camera_pos, &camera_target, &Vector3::y());
+
+    let projection = Perspective3::new(16.0 / 9.0, yfov, 1.0, 1000.0);
+    let model_view = view * model;
+    let mat_model_view = model_view.to_homogeneous();
+    let model_view_projection = projection.as_matrix() * mat_model_view;
+
+    let clip_space_coords: Vector4<f32> = model_view_projection * target.to_homogeneous();
+    let normalized_device_coordinates = clip_space_coords.div(clip_space_coords.w);
+
+    let normalized_device_coordinates = Point2::new(normalized_device_coordinates.x * -1.0 /* quick fix for inverted x, fix root cause! */, normalized_device_coordinates.y);
+    let screen_pos = Point2::new((normalized_device_coordinates.x + 1.0) / 2.0 * window_w, (normalized_device_coordinates.y + 1.0) / 2.0 * window_h);
+    let imgui_coords = Point2::new(screen_pos.x, window_h - screen_pos.y);
+
+    let draw_list = igGetForegroundDrawList();
+    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y - 100.0));
+    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y - 100.0));
+    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y + 100.0));
+    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y + 100.0));
+    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(ImVec4::new(1.0, 0.0, 0.0, 1.0)), true, 6.0);
+}
+
+fn to_point(p0: &Position) -> Point3<f32> {
+    let v = &p0.position;
+    Point3::new(v[0], v[1], v[2])
+}

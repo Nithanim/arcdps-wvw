@@ -3,6 +3,8 @@ use std::ffi::c_void;
 use std::mem::transmute;
 use std::ops::Deref;
 use imgui_sys::*;
+use mumblelink_reader::mumble_link::{MumbleLinkDataReader, MumbleLinkReader};
+use mumblelink_reader::mumble_link_handler::MumbleLinkHandler;
 #[cfg(windows)]
 use windows::Win32::Graphics::Direct3D11;
 use crate::api::matchup::Matchup;
@@ -21,13 +23,16 @@ type GfxDevice<'a> = &'a glium::Display;
 mod api;
 mod icons;
 mod map_renderer;
+mod pos_renderer;
 mod data;
 mod images;
+mod mumble;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
+pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;
 
 #[cfg(not(windows))]
 pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::imgui::Textures<imgui_glium_renderer::Texture>) {
@@ -64,6 +69,30 @@ pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mu
             map.insert(icon, result.unwrap());
         }
         ICONS = Some(map);
+
+        setup_mumble_link();
+    }
+}
+
+#[cfg(not(windows))]
+unsafe fn setup_mumble_link() {}
+
+#[cfg(windows)]
+unsafe fn setup_mumble_link() {
+    let result1 = MumbleLinkHandler::new();
+    if result1.is_err() {
+        eprintln!("Unable to setup mumble link: {}", result1.err().unwrap())
+    } else {
+        MUMBLE_LINK = result1.ok();
+        std::thread::spawn(move || {
+            loop {
+                let handler = MUMBLE_LINK.as_ref().unwrap();
+                let linked_memory = handler.read().unwrap();
+                println!("Pos: {:?}; Camera: {:?}, {:?}", linked_memory.avatar.position, linked_memory.camera.position, linked_memory.camera.front);
+                //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
+                std::thread::sleep(std::time::Duration::from_millis(5000));
+            }
+        });
     }
 }
 
@@ -100,6 +129,8 @@ pub extern "C" fn nithanim_ui() {
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data);
+
+        pos_renderer::render();
     }
 }
 

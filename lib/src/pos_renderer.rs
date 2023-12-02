@@ -17,7 +17,7 @@ pub unsafe fn render() {
     let mut v: ImVec2 = ImVec2::new(1920.0, 1080.0);
     igSetNextWindowSize(v, 0);
 
-    igBegin(c_str!("Full").as_ptr(), &mut true, 0 as ImGuiWindowFlags);
+    igBegin(c_str!("Full").as_ptr(), &mut true, window_flags as ImGuiWindowFlags);
 
     // position: [478.8522, 41.259987, -805.55994]
 
@@ -48,13 +48,9 @@ unsafe fn do_magic(ml: MumbleLinkData) {
 
     let target = Point3::new(-62.843487, 23.980408, 229.41426);
 
-    let camera_pos: Point3<f32> = Point3::new(ml.camera.position[0], ml.camera.position[1], ml.camera.position[2]);
-    let camera_vec: Vector3<f32> = Vector3::new(ml.camera.front[0], ml.camera.front[1], ml.camera.front[2]);
-    let camera_target: Point3<f32> = camera_pos + camera_vec;
+    let view = calc_view_matrix(ml);
 
     let model = Isometry3::new(Vector3::new(0.0, 0.0, 0.0), na::zero());
-
-    let view = Isometry3::look_at_rh(&camera_pos, &camera_target, &Vector3::y());
 
     let projection = Perspective3::new(16.0 / 9.0, yfov, 1.0, 1000.0);
     let model_view = view * model;
@@ -62,18 +58,28 @@ unsafe fn do_magic(ml: MumbleLinkData) {
     let model_view_projection = projection.as_matrix() * mat_model_view;
 
     let clip_space_coords: Vector4<f32> = model_view_projection * target.to_homogeneous();
-    let normalized_device_coordinates = clip_space_coords.div(clip_space_coords.w);
+    if clip_space_coords.z > 0.0 {
+        let normalized_device_coordinates = clip_space_coords.div(clip_space_coords.w);
+        let normalized_device_coordinates = Point2::new(normalized_device_coordinates.x * -1.0 /* quick fix for inverted x, fix root cause! */, normalized_device_coordinates.y);
 
-    let normalized_device_coordinates = Point2::new(normalized_device_coordinates.x * -1.0 /* quick fix for inverted x, fix root cause! */, normalized_device_coordinates.y);
-    let screen_pos = Point2::new((normalized_device_coordinates.x + 1.0) / 2.0 * window_w, (normalized_device_coordinates.y + 1.0) / 2.0 * window_h);
-    let imgui_coords = Point2::new(screen_pos.x, window_h - screen_pos.y);
+        let screen_coords = Point2::new((normalized_device_coordinates.x + 1.0) / 2.0 * window_w, (normalized_device_coordinates.y + 1.0) / 2.0 * window_h);
+        let imgui_coords = Point2::new(screen_coords.x, window_h - screen_coords.y);
 
-    let draw_list = igGetForegroundDrawList();
-    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y - 100.0));
-    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y - 100.0));
-    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y + 100.0));
-    ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y + 100.0));
-    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(ImVec4::new(1.0, 0.0, 0.0, 1.0)), true, 6.0);
+        let draw_list = igGetForegroundDrawList();
+        ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y - 100.0));
+        ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y - 100.0));
+        ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x + 100.0, imgui_coords.y + 100.0));
+        ImDrawList_PathLineTo(draw_list, ImVec2::new(imgui_coords.x - 100.0, imgui_coords.y + 100.0));
+        ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(ImVec4::new(1.0, 0.0, 0.0, 1.0)), true, 6.0);
+    }
+}
+
+unsafe fn calc_view_matrix(ml: MumbleLinkData) -> Isometry3<f32> {
+    let camera_pos: Point3<f32> = Point3::new(ml.camera.position[0], ml.camera.position[1], ml.camera.position[2]);
+    let camera_vec: Vector3<f32> = Vector3::new(ml.camera.front[0], ml.camera.front[1], ml.camera.front[2]);
+    let camera_target: Point3<f32> = camera_pos + camera_vec;
+
+    Isometry3::look_at_rh(&camera_pos, &camera_target, &Vector3::y())
 }
 
 fn to_point(p0: &Position) -> Point3<f32> {

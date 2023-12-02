@@ -88,7 +88,6 @@ unsafe fn setup_mumble_link() {
             loop {
                 let handler = MUMBLE_LINK.as_ref().unwrap();
                 let linked_memory = handler.read().unwrap();
-                println!("Pos: {:?}; Camera: {:?}, {:?}", linked_memory.avatar.position, linked_memory.camera.position, linked_memory.camera.front);
                 //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
                 std::thread::sleep(std::time::Duration::from_millis(5000));
             }

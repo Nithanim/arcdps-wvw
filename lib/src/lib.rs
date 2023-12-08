@@ -28,10 +28,19 @@ mod data;
 mod images;
 mod mumble;
 pub mod options;
+pub mod settings;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
+
+static mut SETTINGS: Settings = Settings {
+    show_current: false,
+    show_red: false,
+    show_green: false,
+    show_blue: false,
+    show_eternal: false,
+};
 
 pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;
 
@@ -45,6 +54,7 @@ pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::im
 use integration::{
     TextureIdType, TextureDataType,
 };
+use crate::settings::Settings;
 
 pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
     where

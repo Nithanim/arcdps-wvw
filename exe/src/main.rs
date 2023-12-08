@@ -5,8 +5,17 @@ use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Surface;
 use imgui::sys::{igBegin, igEnd};
 use arcdps_wvw::{nithanim_setup, nithanim_ui};
+use arcdps_wvw::settings::Settings;
 
 const TITLE: &str = "Test Window";
+
+static mut SETTINGS: Settings = Settings {
+    show_current: false,
+    show_red: false,
+    show_green: false,
+    show_blue: false,
+    show_eternal: false,
+};
 
 fn main() {
     // Common setup for creating a winit window and imgui context, not specifc
@@ -79,7 +88,7 @@ fn render_options() {
     unsafe {
         let a = CString::new("Options window").unwrap();
         igBegin(a.as_ptr(), null_mut(), 0);
-        arcdps_wvw::options::render_options();
+        arcdps_wvw::options::render_options(&mut SETTINGS);
         igEnd()
     }
 }

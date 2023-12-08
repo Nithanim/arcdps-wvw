@@ -27,6 +27,7 @@ mod pos_renderer;
 mod data;
 mod images;
 mod mumble;
+pub mod options;
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
@@ -88,6 +89,7 @@ unsafe fn setup_mumble_link() {
             loop {
                 let handler = MUMBLE_LINK.as_ref().unwrap();
                 let linked_memory = handler.read().unwrap();
+                println!("{:?}", linked_memory);
                 //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
                 std::thread::sleep(std::time::Duration::from_millis(5000));
             }

@@ -1,9 +1,12 @@
+use std::ffi::CString;
+use std::ptr::null_mut;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Surface;
+use imgui::sys::{igBegin, igEnd};
 use arcdps_wvw::{nithanim_setup, nithanim_ui};
 
-const TITLE: &str = "Hello, imgui-rs!";
+const TITLE: &str = "Test Window";
 
 fn main() {
     // Common setup for creating a winit window and imgui context, not specifc
@@ -40,6 +43,8 @@ fn main() {
             // Create frame for the all important `&imgui::Ui`
             let ui = imgui_context.frame();
 
+            render_options();
+
             // Draw our example content
             //ui.show_demo_window(&mut false);
             nithanim_ui();
@@ -68,6 +73,15 @@ fn main() {
             winit_platform.handle_event(imgui_context.io_mut(), gl_window.window(), &event);
         }
     });
+}
+
+fn render_options() {
+    unsafe {
+        let a = CString::new("Options window").unwrap();
+        igBegin(a.as_ptr(), null_mut(), 0);
+        arcdps_wvw::options::render_options();
+        igEnd()
+    }
 }
 
 fn create_window() -> (EventLoop<()>, glium::Display) {

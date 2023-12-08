@@ -1,5 +1,6 @@
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
+use crate::options::render_options;
 
 static mut filelog: *mut c_void = null_mut();
 
@@ -16,11 +17,20 @@ pub static mut ARC_EXPORTS_STATIC: arcdps_exports = arcdps_exports {
     combat: null(), // mod_combat as *const c_void,
     wnd_nofilter: null(), //mod_wnd as *const c_void,
     imgui: mod_imgui as *const c_void,
-    options_end: null(),
+    options_end: options_end as *const c_void,
     combat_local: null(),
     wnd_filter: null(),
     options_windows: null(),
 };
+
+pub unsafe extern "C" fn options_end() -> usize {
+    render_options();
+    return 0;
+}
+
+pub unsafe extern "C" fn options_windows(windowname: *const char) -> usize {
+    0
+}
 
 
 #[no_mangle]

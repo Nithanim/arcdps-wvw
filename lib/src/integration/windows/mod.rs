@@ -1,10 +1,11 @@
 pub mod icon_loader;
 
 use std::ffi::{c_char, c_void};
+use std::mem;
 use std::ptr::{null_mut};
 use imgui_sys::{igSetAllocatorFunctions, igSetCurrentContext, ImGuiContext};
 use windows::Win32::Graphics::Direct3D11::ID3D11Device;
-use windows::Win32::Graphics::Dxgi::IDXGISwapChain;
+use windows::Win32::Graphics::Dxgi::{DXGI_SWAP_CHAIN_DESC, IDXGISwapChain};
 use windows::Win32::Foundation::HMODULE;
 
 use crate::integration::arcdps::*;
@@ -40,6 +41,10 @@ pub static mut D3D11_DEVICE: Option<ID3D11Device> = None;
 
 unsafe fn init_dxgi(device: *const c_void) {
     let swap_chain: &IDXGISwapChain = std::mem::transmute(&device);
+
+    let mut a: DXGI_SWAP_CHAIN_DESC = mem::zeroed();
+    swap_chain.GetDesc(&mut a);
+    println!("SIZE: {}x{}", a.BufferDesc.Width, a.BufferDesc.Height);
 
     DXGI_SWAP_CHAIN = Some(swap_chain.clone());
     let dev: Result<ID3D11Device, _> = swap_chain.GetDevice();

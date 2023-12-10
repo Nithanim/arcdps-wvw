@@ -39,21 +39,21 @@ pub unsafe fn load_icon<F>(icon: icons::Icon, device: *const Direct3D11::ID3D11D
     };
 
 
-    let mut pTexture: Option<Direct3D11::ID3D11Texture2D> = None;
+    let mut texture: Option<Direct3D11::ID3D11Texture2D> = None;
     let create_texture2dres = device.CreateTexture2D(
         &desc,
         Some(&sub_resource),
-        Some(&mut pTexture),
+        Some(&mut texture),
     );
 
     if create_texture2dres.is_err() {
         panic!("Error creating 2d texture!");
     }
-    if pTexture.is_none() {
+    if texture.is_none() {
         panic!("WTF1??");
     }
 
-    let srvDescTexture = Direct3D11::D3D11_SHADER_RESOURCE_VIEW_DESC {
+    let srv_desc_texture = Direct3D11::D3D11_SHADER_RESOURCE_VIEW_DESC {
         Format: format,
         ViewDimension: D3D11_SRV_DIMENSION_TEXTURE2D,
         Anonymous: D3D11_SHADER_RESOURCE_VIEW_DESC_0 {
@@ -64,10 +64,10 @@ pub unsafe fn load_icon<F>(icon: icons::Icon, device: *const Direct3D11::ID3D11D
         },
     };
 
-    let pTexture = pTexture.unwrap();
+    let texture = texture.unwrap();
 
     let mut d11texture: Option<Direct3D11::ID3D11ShaderResourceView> = None;
-    let v = device.CreateShaderResourceView(&pTexture, Some(&srvDescTexture), Some(&mut d11texture));
+    let v = device.CreateShaderResourceView(&texture, Some(&srv_desc_texture), Some(&mut d11texture));
 
     if v.is_err() {
         panic!("Error creating 2d texture!");

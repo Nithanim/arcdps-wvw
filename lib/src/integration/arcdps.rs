@@ -40,16 +40,15 @@ pub unsafe extern "C" fn mod_combat(ev: *mut cbtevent, src: *mut ag, dst: *mut a
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn mod_imgui(pNotCharSelectionOrLoading: u32, pHideIfCombatOrOoc: u32) -> usize
+pub unsafe extern "C" fn mod_imgui(p_not_char_selection_or_loading: u32, p_hide_if_combat_or_ooc: u32) -> usize
 {
     crate::nithanim_ui();
-    if pNotCharSelectionOrLoading == 0 || pHideIfCombatOrOoc != 0
+    if p_not_char_selection_or_loading == 0 || p_hide_if_combat_or_ooc != 0
     {
         return 0;
     }
     return 0;
 }
-
 
 
 // TODO quick-fix to dummy because on the linux-tester, we never call it

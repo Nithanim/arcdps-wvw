@@ -7,7 +7,7 @@ use nalgebra as na;
 use crate::mumble::{GuildwarsContext, MumbleLinkIdentity};
 use crate::MUMBLE_LINK;
 
-const window_flags: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
+const WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
     | ImGuiWindowFlags_NoInputs
     | ImGuiWindowFlags_NoNav
     | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
@@ -17,7 +17,7 @@ pub unsafe fn render() {
     let mut v: ImVec2 = ImVec2::new(1920.0, 1080.0);
     igSetNextWindowSize(v, 0);
 
-    igBegin(c_str!("Full").as_ptr(), &mut true, window_flags as ImGuiWindowFlags);
+    igBegin(c_str!("Full").as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
 
     // position: [478.8522, 41.259987, -805.55994]
 

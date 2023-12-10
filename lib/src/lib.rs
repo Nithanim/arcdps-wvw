@@ -91,7 +91,7 @@ pub extern "C" fn nithanim_ui() {
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data,
-            &SETTINGS);
+            &mut SETTINGS);
 
         pos_renderer::render();
     }

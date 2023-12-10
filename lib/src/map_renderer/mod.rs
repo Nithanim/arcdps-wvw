@@ -3,17 +3,15 @@ mod rendering;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::time::Instant;
-use c_str_macro::c_str;
 use imgui_sys::*;
 use crate::api::objective_definition;
 use crate::api::objective_definition::ObjectiveDefinition;
 use crate::{icons, ImGuiIcon};
 use crate::api::matchup::Matchup;
 use crate::api::objective::Objective;
-use crate::api::owner::OwningForce;
 use crate::api::world_map_type::WorldMapType;
 use crate::data::SharedData;
-use crate::map_renderer::rendering::render_map_;
+use crate::map_renderer::rendering::render_map;
 use crate::settings::Settings;
 
 pub struct MapWindow<'a> {
@@ -22,8 +20,7 @@ pub struct MapWindow<'a> {
     shared_data: Option<&'a SharedData>,
 }
 
-impl MapWindow<'_> {
-}
+impl MapWindow<'_> {}
 
 struct Data<'a> {
     objective_definitions: Vec<&'a ObjectiveDefinition>,
@@ -31,7 +28,7 @@ struct Data<'a> {
     icons: &'a HashMap<icons::Icon, ImGuiIcon>,
 }
 
-pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &Settings) {
+pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
     //let map_types_to_render = get_map_types_to_render(settings, );
 
     let pre_computed: HashMap<WorldMapType, Data> = pre_compute(objectives, icons, shared_data);
@@ -39,23 +36,23 @@ pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icon
 
     if settings.show_eternal {
         let option = pre_computed.get(&WorldMapType::ETERNAL);
-        render_pre("Eternal battlegrounds", option.unwrap(), shared_data);
+        render_pre("Eternal battlegrounds", option.unwrap(), shared_data, &mut settings.show_eternal);
     }
     if settings.show_red {
-        render_pre("Red borderlands", pre_computed.get(&WorldMapType::RED).unwrap(), shared_data);
+        render_pre("Red borderlands", pre_computed.get(&WorldMapType::RED).unwrap(), shared_data, &mut settings.show_red);
     }
     if settings.show_green {
-        render_pre("Green borderlands", pre_computed.get(&WorldMapType::GREEN).unwrap(), shared_data);
+        render_pre("Green borderlands", pre_computed.get(&WorldMapType::GREEN).unwrap(), shared_data, &mut settings.show_green);
     }
     if settings.show_blue {
-        render_pre("Blue borderlands", pre_computed.get(&WorldMapType::BLUE).unwrap(), shared_data);
+        render_pre("Blue borderlands", pre_computed.get(&WorldMapType::BLUE).unwrap(), shared_data, &mut settings.show_blue);
     }
     if settings.show_current {
-        render_pre("Current borderlands", pre_computed.get(&WorldMapType::ETERNAL).unwrap(), shared_data);
+        render_pre("Current borderlands", pre_computed.get(&WorldMapType::ETERNAL).unwrap(), shared_data, &mut settings.show_current);
     }
 }
 
-unsafe fn pre_compute<'a>(objectives: &'a Vec<ObjectiveDefinition>, icons: &'a HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&'a SharedData>) -> HashMap<WorldMapType, Data<'a>> {
+fn pre_compute<'a>(objectives: &'a Vec<ObjectiveDefinition>, icons: &'a HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&'a SharedData>) -> HashMap<WorldMapType, Data<'a>> {
     let mut result: HashMap<WorldMapType, Data<'a>> = HashMap::new();
 
     let interesting_objective_definitions: Vec<&ObjectiveDefinition> = objectives.iter()
@@ -105,19 +102,17 @@ unsafe fn pre_compute<'a>(objectives: &'a Vec<ObjectiveDefinition>, icons: &'a H
         });
     }
 
-
     result
 }
 
-unsafe fn render_pre(title: &str, data: &Data, shared_data: Option<&SharedData>) {
+unsafe fn render_pre(title: &str, data: &Data, shared_data: Option<&SharedData>, window_open: &mut bool) {
     let window_name = CString::new(title).unwrap();
-    if igBegin(window_name.as_ptr(), &mut true, 0) {
-    }
+    if igBegin(window_name.as_ptr(), window_open, 0) {}
 
     let string = CString::new(get_last_updated_text(shared_data)).unwrap();
     igText(string.as_ptr());
 
-    render_map_(&data.objective_definitions, data.icons, &data.objective_states);
+    render_map(&data.objective_definitions, data.icons, &data.objective_states);
 
     igEnd();
 }

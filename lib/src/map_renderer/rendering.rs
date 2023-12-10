@@ -7,12 +7,11 @@ use crate::{icons, ImGuiIcon};
 use crate::api::objective::Objective;
 use crate::api::owner::OwningForce;
 
-pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>,
-                          icons: &HashMap<icons::Icon, ImGuiIcon>,
-                          objectives: &HashMap<&String, &Objective>) {
+pub unsafe fn render_map(objective_definitions: &Vec<&ObjectiveDefinition>,
+                         icons: &HashMap<icons::Icon, ImGuiIcon>,
+                         objectives: &HashMap<&String, &Objective>) {
     let mut pos = ImVec2::zero();
     igGetCursorPos(&mut pos);
-    //println!("{}, {}", pos.x, pos.y);
     let mut available_area = ImVec2::zero();
     igGetContentRegionAvail(&mut available_area);
 
@@ -67,7 +66,7 @@ pub unsafe fn render_map_(objective_definitions: &Vec<&ObjectiveDefinition>,
 
     //igSetCursorPos(ImVec2::new(pos.x + available_area.x, pos.y + available_area.y));
     igSetCursorPos(pos);
-    igDummy(ImVec2::new(available_area.x, available_area.y));
+    igDummy(ImVec2::new(150.0, 150.0));
 
     //igDummy(ImVec2::new(available_area.x, available_area.y));
 }

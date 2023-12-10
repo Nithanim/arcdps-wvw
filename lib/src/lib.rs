@@ -34,7 +34,7 @@ static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
-static mut SETTINGS: Settings = Settings {
+pub static mut SETTINGS: Settings = Settings {
     show_current: false,
     show_red: false,
     show_green: false,
@@ -139,7 +139,8 @@ pub extern "C" fn nithanim_ui() {
         map_renderer::render(
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
-            data);
+            data,
+            &SETTINGS);
 
         pos_renderer::render();
     }

@@ -4,18 +4,9 @@ use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Surface;
 use imgui::sys::{igBegin, igEnd};
-use arcdps_wvw::{nithanim_setup, nithanim_ui};
-use arcdps_wvw::settings::Settings;
+use arcdps_wvw::{nithanim_setup, nithanim_ui, SETTINGS};
 
 const TITLE: &str = "Test Window";
-
-static mut SETTINGS: Settings = Settings {
-    show_current: false,
-    show_red: false,
-    show_green: false,
-    show_blue: false,
-    show_eternal: false,
-};
 
 fn main() {
     // Common setup for creating a winit window and imgui context, not specifc

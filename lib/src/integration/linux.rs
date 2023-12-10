@@ -1,10 +1,15 @@
 use std::ops::Deref;
 use std::rc::Rc;
 use imgui_sys::ImVec2;
-use crate::{GfxDevice, icons, ImGuiIcon};
+use crate::{icons, ImGuiIcon};
+
+pub type GfxDevice<'a> = &'a glium::Display;
 
 pub type TextureDataType = imgui_glium_renderer::Texture;
 pub type TextureIdType = imgui_glium_renderer::imgui::TextureId;
+
+
+pub unsafe fn setup_mumble_link() {}
 
 pub unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter: &mut F) -> Result<ImGuiIcon, String>
     where

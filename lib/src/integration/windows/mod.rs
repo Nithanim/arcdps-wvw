@@ -12,6 +12,8 @@ use crate::integration::arcdps::*;
 
 pub use icon_loader::load_icon;
 
+pub type GfxDevice = *const Direct3D11::ID3D11Device;
+
 pub type TextureDataType = ();
 pub type TextureIdType = ();
 
@@ -71,4 +73,21 @@ pub unsafe extern "system" fn mod_release() -> *mut c_void {
     null_mut()
 }
 
+pub unsafe fn setup_mumble_link() {
+    let result1 = MumbleLinkHandler::new();
+    if result1.is_err() {
+        eprintln!("Unable to setup mumble link: {}", result1.err().unwrap())
+    } else {
+        MUMBLE_LINK = result1.ok();
+        std::thread::spawn(move || {
+            loop {
+                let handler = MUMBLE_LINK.as_ref().unwrap();
+                let linked_memory = handler.read().unwrap();
+                println!("{:?}", linked_memory);
+                //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
+                std::thread::sleep(std::time::Duration::from_millis(5000));
+            }
+        });
+    }
+}
 

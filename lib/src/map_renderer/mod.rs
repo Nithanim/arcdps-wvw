@@ -23,9 +23,6 @@ pub struct MapWindow<'a> {
 }
 
 impl MapWindow<'_> {
-    unsafe fn render(&self) {
-        rendering::render(self.objectives, self.icons, self.shared_data)
-    }
 }
 
 struct Data<'a> {

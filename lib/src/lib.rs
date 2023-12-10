@@ -8,17 +8,15 @@ use mumblelink_reader::mumble_link_handler::MumbleLinkHandler;
 #[cfg(windows)]
 use windows::Win32::Graphics::Direct3D11;
 use crate::api::matchup::Matchup;
-use crate::api::owner::Faction;
-use crate::api::owner::Faction::{BLUE, GREEN, RED};
-use crate::api::world_map_type::WorldMapType;
 use crate::api::objective_definition::ObjectiveDefinition;
 
-mod integration;
+use integration::{
+    TextureIdType, TextureDataType,
+};
+use crate::integration::{GfxDevice, setup_mumble_link};
+use crate::settings::Settings;
 
-#[cfg(windows)]
-type GfxDevice = *const Direct3D11::ID3D11Device;
-#[cfg(not(windows))]
-type GfxDevice<'a> = &'a glium::Display;
+mod integration;
 
 mod api;
 mod icons;
@@ -29,6 +27,8 @@ mod images;
 mod mumble;
 pub mod options;
 pub mod settings;
+mod helpers;
+
 
 static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
@@ -49,12 +49,6 @@ pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::im
     let mut f = |x: imgui_glium_renderer::Texture| textures.insert(x);
     nithanim_setup_internal(device, &mut f);
 }
-
-
-use integration::{
-    TextureIdType, TextureDataType,
-};
-use crate::settings::Settings;
 
 pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
     where
@@ -85,49 +79,6 @@ pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mu
     }
 }
 
-#[cfg(not(windows))]
-unsafe fn setup_mumble_link() {}
-
-#[cfg(windows)]
-unsafe fn setup_mumble_link() {
-    let result1 = MumbleLinkHandler::new();
-    if result1.is_err() {
-        eprintln!("Unable to setup mumble link: {}", result1.err().unwrap())
-    } else {
-        MUMBLE_LINK = result1.ok();
-        std::thread::spawn(move || {
-            loop {
-                let handler = MUMBLE_LINK.as_ref().unwrap();
-                let linked_memory = handler.read().unwrap();
-                println!("{:?}", linked_memory);
-                //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
-                std::thread::sleep(std::time::Duration::from_millis(5000));
-            }
-        });
-    }
-}
-
-fn get_wold_map_type(faction: Faction) -> WorldMapType {
-    return match faction {
-        RED => WorldMapType::RED,
-        GREEN => WorldMapType::GREEN,
-        BLUE => WorldMapType::BLUE,
-    };
-}
-
-fn get_home_world_faction(home_world: i32) -> Option<Faction> {
-    let worlds = unsafe { &MATCHUP.as_ref().unwrap().all_worlds };
-
-    return if worlds.red.iter().find(|&&w| w == home_world).is_some() {
-        Some(RED)
-    } else if worlds.green.iter().find(|&&w| w == home_world).is_some() {
-        Some(GREEN)
-    } else if worlds.blue.iter().find(|&&w| w == home_world).is_some() {
-        Some(BLUE)
-    } else {
-        None
-    };
-}
 
 #[no_mangle]
 pub extern "C" fn nithanim_ui() {

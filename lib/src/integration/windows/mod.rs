@@ -8,11 +8,15 @@ use windows::Win32::Graphics::Direct3D11::ID3D11Device;
 use windows::Win32::Graphics::Dxgi::{DXGI_SWAP_CHAIN_DESC, IDXGISwapChain};
 use windows::Win32::Foundation::HMODULE;
 
+use mumblelink_reader::mumble_link::{MumbleLinkDataReader, MumbleLinkReader};
+use mumblelink_reader::mumble_link_handler::MumbleLinkHandler;
+
 use crate::integration::arcdps::*;
 
 pub use icon_loader::load_icon;
+use crate::MUMBLE_LINK;
 
-pub type GfxDevice = *const Direct3D11::ID3D11Device;
+pub type GfxDevice = *const ID3D11Device;
 
 pub type TextureDataType = ();
 pub type TextureIdType = ();

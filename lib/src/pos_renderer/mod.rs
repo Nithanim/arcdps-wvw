@@ -2,7 +2,7 @@ use std::ops::Div;
 use c_str_macro::c_str;
 use imgui_sys::*;
 use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader, MumbleLinkReader, Position};
-use nalgebra::{Isometry3, Perspective3, Point2, Point3, Vector3, Vector4};
+use nalgebra::{Isometry3, OMatrix, Perspective3, Point2, Point3, Vector3, Vector4};
 use nalgebra as na;
 use crate::mumble::{GuildwarsContext, MumbleLinkIdentity};
 use crate::MUMBLE_LINK;
@@ -37,27 +37,13 @@ pub unsafe fn render() {
 
 unsafe fn do_magic(ml: MumbleLinkData) {
     //let gw2context = ml.read_context_into_struct::<GuildwarsContext>();
-    let yfov = if ml.identity.len() > 5 {
-        serde_json::from_str::<MumbleLinkIdentity>(ml.identity.as_str()).map(|e| e.fov).unwrap_or(1.222)
-    } else {
-        1.222
-    };
-
+    let target = Point3::new(-62.843487, 23.980408, 229.41426);
     let window_w = 1920.0;
     let window_h = 1080.0;
 
-    let target = Point3::new(-62.843487, 23.980408, 229.41426);
+    let view_projection = get_view_projection_matrix(&ml);
 
-    let view = calc_view_matrix(ml);
-
-    let model = Isometry3::new(Vector3::new(0.0, 0.0, 0.0), na::zero());
-
-    let projection = Perspective3::new(16.0 / 9.0, yfov, 1.0, 1000.0);
-    let model_view = view * model;
-    let mat_model_view = model_view.to_homogeneous();
-    let model_view_projection = projection.as_matrix() * mat_model_view;
-
-    let clip_space_coords: Vector4<f32> = model_view_projection * target.to_homogeneous();
+    let clip_space_coords: Vector4<f32> = view_projection * target.to_homogeneous();
     if clip_space_coords.z > 0.0 {
         let normalized_device_coordinates = clip_space_coords.div(clip_space_coords.w);
         let normalized_device_coordinates = Point2::new(normalized_device_coordinates.x * -1.0 /* quick fix for inverted x, fix root cause! */, normalized_device_coordinates.y);
@@ -74,7 +60,26 @@ unsafe fn do_magic(ml: MumbleLinkData) {
     }
 }
 
-unsafe fn calc_view_matrix(ml: MumbleLinkData) -> Isometry3<f32> {
+fn get_view_projection_matrix(ml: &MumbleLinkData) -> OMatrix<f32, na::U4, na::Const<4>> {
+    let yfov = get_yfov(&ml);
+
+    let view = calc_view_matrix(ml);
+
+    let projection = Perspective3::new(16.0 / 9.0, yfov, 1.0, 1000.0);
+    let view_projection = projection.as_matrix() * view.to_homogeneous();
+    view_projection
+}
+
+fn get_yfov(ml: &MumbleLinkData) -> f32 {
+    let yfov = if ml.identity.len() > 5 {
+        serde_json::from_str::<MumbleLinkIdentity>(ml.identity.as_str()).map(|e| e.fov).unwrap_or(1.222)
+    } else {
+        1.222
+    };
+    yfov
+}
+
+fn calc_view_matrix(ml: &MumbleLinkData) -> Isometry3<f32> {
     let camera_pos: Point3<f32> = Point3::new(ml.camera.position[0], ml.camera.position[1], ml.camera.position[2]);
     let camera_vec: Vector3<f32> = Vector3::new(ml.camera.front[0], ml.camera.front[1], ml.camera.front[2]);
     let camera_target: Point3<f32> = camera_pos + camera_vec;

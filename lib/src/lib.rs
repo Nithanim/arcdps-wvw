@@ -21,7 +21,6 @@ mod integration;
 mod api;
 mod icons;
 mod map_renderer;
-mod pos_renderer;
 mod data;
 mod images;
 mod mumble;
@@ -95,7 +94,7 @@ pub extern "C" fn nithanim_ui() {
             data,
             &mut SETTINGS);
 
-        pos_renderer::render();
+        world3d::pos_renderer::render();
     }
 }
 

@@ -27,6 +27,8 @@ mod images;
 mod mumble;
 pub mod options;
 pub mod settings;
+pub mod world3d;
+
 mod helpers;
 
 

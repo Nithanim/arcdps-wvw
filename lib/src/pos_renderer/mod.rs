@@ -4,6 +4,7 @@ use imgui_sys::*;
 use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader, MumbleLinkReader, Position};
 use nalgebra::{Isometry3, OMatrix, Perspective3, Point2, Point3, Vector3, Vector4};
 use nalgebra as na;
+use crate::world3d::screen::get_screen_size;
 use crate::mumble::{GuildwarsContext, MumbleLinkIdentity};
 use crate::MUMBLE_LINK;
 
@@ -14,13 +15,9 @@ const WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
 
 pub unsafe fn render() {
     igSetNextWindowPos(ImVec2::new(0f32, 0f32), 0, ImVec2::zero());
-    let mut v: ImVec2 = ImVec2::new(1920.0, 1080.0);
-    igSetNextWindowSize(v, 0);
+    igSetNextWindowSize(get_screen_size(), 0);
 
     igBegin(c_str!("Full").as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
-
-    // position: [478.8522, 41.259987, -805.55994]
-
 
     let handler = MUMBLE_LINK.as_ref();
     if handler.is_some() {
@@ -28,7 +25,6 @@ pub unsafe fn render() {
 
         do_magic(linked_memory);
     }
-
 
     //up is (0, 1, 0)
 

@@ -3,10 +3,10 @@ pub mod icon_loader;
 use std::ffi::{c_char, c_void};
 use std::mem;
 use std::ptr::{null_mut};
-use imgui_sys::{igSetAllocatorFunctions, igSetCurrentContext, ImGuiContext};
+use imgui_sys::{igSetAllocatorFunctions, igSetCurrentContext, ImGuiContext, ImVec2};
 use windows::Win32::Graphics::Direct3D11::ID3D11Device;
 use windows::Win32::Graphics::Dxgi::{DXGI_SWAP_CHAIN_DESC, IDXGISwapChain};
-use windows::Win32::Foundation::HMODULE;
+use windows::Win32::Foundation::{HMODULE, HWND, LPARAM, WPARAM};
 
 use mumblelink_reader::mumble_link::{MumbleLinkDataReader, MumbleLinkReader};
 use mumblelink_reader::mumble_link_handler::MumbleLinkHandler;
@@ -15,6 +15,7 @@ use crate::integration::arcdps::*;
 
 pub use icon_loader::load_icon;
 use crate::MUMBLE_LINK;
+use crate::world3d::screen::set_screen_size;
 
 pub type GfxDevice = *const ID3D11Device;
 
@@ -50,7 +51,7 @@ unsafe fn init_dxgi(device: *const c_void) {
 
     let mut a: DXGI_SWAP_CHAIN_DESC = mem::zeroed();
     swap_chain.GetDesc(&mut a);
-    println!("SIZE: {}x{}", a.BufferDesc.Width, a.BufferDesc.Height);
+    set_screen_size(ImVec2::new(a.BufferDesc.Width as f32, a.BufferDesc.Height as f32));
 
     DXGI_SWAP_CHAIN = Some(swap_chain.clone());
     let dev: Result<ID3D11Device, _> = swap_chain.GetDevice();
@@ -75,6 +76,18 @@ pub extern "system" fn get_release_addr() -> *const c_void {
 pub unsafe extern "system" fn mod_release() -> *mut c_void {
     // winapi::um::wincon::FreeConsole();
     null_mut()
+}
+
+pub unsafe extern "C" fn mod_wnd(hWnd: HWND, uMsg: u32, wParam: WPARAM, lParam: LPARAM) -> usize {
+    const WM_SIZE: i32 = 0x0005;
+
+    if uMsg == WM_SIZE as u32 {
+        let width = lParam.0 & 0xFFFF;
+        let height = (lParam.0 >> 16) & 0xFFFF;
+        set_screen_size(ImVec2::new(width as f32, height as f32));
+    }
+
+    return uMsg as usize;
 }
 
 pub unsafe fn setup_mumble_link() {

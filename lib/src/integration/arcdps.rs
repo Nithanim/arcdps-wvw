@@ -16,7 +16,7 @@ pub static mut ARC_EXPORTS_STATIC: arcdps_exports = arcdps_exports {
     out_name: EXT_NAME.as_ptr(),
     out_build: EXT_VERSION.as_ptr(),
     combat: null(), // mod_combat as *const c_void,
-    wnd_nofilter: null(), //mod_wnd as *const c_void,
+    wnd_nofilter: crate::integration::mod_wnd as *const c_void, //mod_wnd as *const c_void,
     imgui: mod_imgui as *const c_void,
     options_end: options_end as *const c_void,
     combat_local: null(),

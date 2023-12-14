@@ -33,3 +33,8 @@ pub unsafe fn load_icon<F>(icon: icons::Icon, device: GfxDevice, imgui_converter
         texture: imgui_converter(texture),
     })
 }
+
+// DUMMY FOR WINDOWS
+pub unsafe extern "C" fn mod_wnd() -> usize {
+    return 1 as usize
+}

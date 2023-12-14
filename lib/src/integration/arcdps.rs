@@ -1,6 +1,6 @@
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
-use crate::options::render_options;
+use crate::settings::render_options;
 use crate::SETTINGS;
 
 static mut filelog: *mut c_void = null_mut();

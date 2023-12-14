@@ -79,7 +79,7 @@ fn render_options() {
     unsafe {
         let a = CString::new("Options window").unwrap();
         igBegin(a.as_ptr(), null_mut(), 0);
-        arcdps_wvw::options::render_options(&mut SETTINGS);
+        arcdps_wvw::settings::render_options(&mut SETTINGS);
         igEnd()
     }
 }

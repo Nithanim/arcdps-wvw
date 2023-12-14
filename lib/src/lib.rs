@@ -24,7 +24,6 @@ mod map_renderer;
 mod data;
 mod images;
 mod mumble;
-pub mod options;
 pub mod settings;
 pub mod world3d;
 
@@ -36,6 +35,7 @@ static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
 pub static mut SETTINGS: Settings = Settings {
+    show_objectives_overlay: false,
     show_current: false,
     show_red: false,
     show_green: false,

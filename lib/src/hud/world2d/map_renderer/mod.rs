@@ -11,7 +11,7 @@ use crate::api::matchup::Matchup;
 use crate::api::objective::Objective;
 use crate::api::world_map_type::WorldMapType;
 use crate::data::SharedData;
-use crate::map_renderer::rendering::render_map;
+use crate::hud::world2d::map_renderer::rendering::render_map;
 use crate::settings::Settings;
 
 pub struct MapWindow<'a> {

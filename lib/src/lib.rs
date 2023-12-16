@@ -20,7 +20,6 @@ mod integration;
 
 mod api;
 mod icons;
-mod map_renderer;
 mod data;
 mod images;
 mod mumble;
@@ -88,13 +87,13 @@ pub extern "C" fn nithanim_ui() {
     let data = mutex.as_ref();
 
     unsafe {
-        map_renderer::render(
+        hud::render2d(
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data,
             &mut SETTINGS);
 
-        hud::render();
+        hud::render3d();
     }
 }
 

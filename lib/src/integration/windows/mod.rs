@@ -14,8 +14,8 @@ use mumblelink_reader::mumble_link_handler::MumbleLinkHandler;
 use crate::integration::arcdps::*;
 
 pub use icon_loader::load_icon;
+use crate::hud::screen::set_screen_size;
 use crate::MUMBLE_LINK;
-use crate::world3d::screen::set_screen_size;
 
 pub type GfxDevice = *const ID3D11Device;
 

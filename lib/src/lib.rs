@@ -25,7 +25,7 @@ mod data;
 mod images;
 mod mumble;
 pub mod settings;
-pub mod world3d;
+pub mod hud;
 
 mod helpers;
 
@@ -94,7 +94,7 @@ pub extern "C" fn nithanim_ui() {
             data,
             &mut SETTINGS);
 
-        world3d::pos_renderer::render();
+        hud::render();
     }
 }
 

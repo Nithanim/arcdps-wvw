@@ -1,19 +1,28 @@
+mod helpers;
+
 use std::ops::Div;
-use imgui_sys::{igGetColorU32Vec4, igGetForegroundDrawList, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImVec2, ImVec4};
-use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader};
+use c_str_macro::c_str;
+use imgui_sys::{igBegin, igEnd, igGetColorU32Vec4, igGetForegroundDrawList, igSetNextWindowPos, igSetNextWindowSize, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiWindowFlags, ImVec2, ImVec4};
+use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader, MumbleLinkReader};
 use nalgebra::{Const, OMatrix, Point2, Point3, U4, Vector4};
 use crate::mumble::GuildwarsContext;
+use crate::hud::{screen, WINDOW_FLAGS};
 use crate::settings::Settings;
-use crate::world3d::helpers;
-use crate::world3d::screen::get_screen_size;
 
-pub fn render_hud(settings: &Settings, ml: &MumbleLinkData) {
-    if get_current_map_id(ml) != 0 {
-        render_hud_(settings, ml);
-    }
+pub unsafe fn render_hud(settings: &Settings, ml: &MumbleLinkData) {
+    igSetNextWindowPos(ImVec2::new(0f32, 0f32), 0, ImVec2::zero());
+    igSetNextWindowSize(screen::get_screen_size(), 0);
+
+    igBegin(c_str!("Full").as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
+    render_hud_(settings, ml);
+
+    //up is (0, 1, 0)
+
+    igEnd();
 }
+
 pub fn render_hud_(settings: &Settings, ml: &MumbleLinkData) {
-    let screen_size = get_screen_size();
+    let screen_size = screen::get_screen_size();
     let view_projection = helpers::get_view_projection_matrix(&ml);
 
     if settings.show_objectives_overlay {
@@ -34,7 +43,7 @@ pub fn render_hud_(settings: &Settings, ml: &MumbleLinkData) {
     }
 }
 
-fn get_current_map_id(ml: &MumbleLinkData) -> u32 {
+pub(crate) fn get_current_map_id(ml: &MumbleLinkData) -> u32 {
     let gw2context = ml.read_context_into_struct::<GuildwarsContext>();
     return gw2context.map_id;
 }

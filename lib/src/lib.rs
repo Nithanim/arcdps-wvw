@@ -87,13 +87,11 @@ pub extern "C" fn nithanim_ui() {
     let data = mutex.as_ref();
 
     unsafe {
-        hud::render2d(
+        hud::render(
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data,
             &mut SETTINGS);
-
-        hud::render3d();
     }
 }
 

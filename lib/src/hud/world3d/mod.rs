@@ -2,12 +2,17 @@ mod helpers;
 
 use std::ops::Div;
 use c_str_macro::c_str;
-use imgui_sys::{igBegin, igEnd, igGetColorU32Vec4, igGetForegroundDrawList, igSetNextWindowPos, igSetNextWindowSize, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiWindowFlags, ImVec2, ImVec4};
+use imgui_sys::{igBegin, igEnd, igGetColorU32Vec4, igGetForegroundDrawList, igSetNextWindowPos, igSetNextWindowSize, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiWindowFlags, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoDecoration, ImGuiWindowFlags_NoInputs, ImGuiWindowFlags_NoNav, ImVec2, ImVec4};
 use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkDataReader, MumbleLinkReader};
 use nalgebra::{Const, OMatrix, Point2, Point3, U4, Vector4};
 use crate::mumble::GuildwarsContext;
-use crate::hud::{screen, WINDOW_FLAGS};
+use crate::hud::{screen};
 use crate::settings::Settings;
+
+const WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
+    | ImGuiWindowFlags_NoInputs
+    | ImGuiWindowFlags_NoNav
+    | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
 
 pub unsafe fn render_hud(settings: &Settings, ml: &MumbleLinkData) {
     igSetNextWindowPos(ImVec2::new(0f32, 0f32), 0, ImVec2::zero());

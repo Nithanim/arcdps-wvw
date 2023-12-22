@@ -40,6 +40,7 @@ pub static mut SETTINGS: Settings = Settings {
     show_green: false,
     show_blue: false,
     show_eternal: false,
+    show_compass: false,
 };
 
 pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;

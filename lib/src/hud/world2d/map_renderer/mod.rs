@@ -107,14 +107,14 @@ fn pre_compute<'a>(objectives: &'a Vec<ObjectiveDefinition>, icons: &'a HashMap<
 
 unsafe fn render_pre(title: &str, data: &Data, shared_data: Option<&SharedData>, window_open: &mut bool) {
     let window_name = CString::new(title).unwrap();
-    if igBegin(window_name.as_ptr(), window_open, 0) {}
+    if igBegin(window_name.as_ptr(), window_open, 0) {
+        let string = CString::new(get_last_updated_text(shared_data)).unwrap();
+        igText(string.as_ptr());
 
-    let string = CString::new(get_last_updated_text(shared_data)).unwrap();
-    igText(string.as_ptr());
+        render_map(&data.objective_definitions, data.icons, &data.objective_states);
 
-    render_map(&data.objective_definitions, data.icons, &data.objective_states);
-
-    igEnd();
+        igEnd();
+    }
 }
 
 fn get_last_updated_text(shared_data: Option<&SharedData>) -> String {

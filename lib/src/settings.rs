@@ -9,6 +9,8 @@ pub struct Settings {
     pub show_green: bool,
     pub show_blue: bool,
     pub show_eternal: bool,
+
+    pub show_compass: bool,
 }
 
 impl Default for Settings {
@@ -20,6 +22,7 @@ impl Default for Settings {
             show_green: false,
             show_blue: false,
             show_eternal: false,
+            show_compass: false,
         }
     }
 }
@@ -34,4 +37,5 @@ pub unsafe fn render_options(settings: &mut Settings) {
         igCheckbox(c_str!("Blue border").as_ptr(), &mut settings.show_blue);
         igEndMenu();
     }
+    igCheckbox(c_str!("Compass").as_ptr(), &mut settings.show_compass);
 }

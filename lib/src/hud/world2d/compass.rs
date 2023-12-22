@@ -24,11 +24,20 @@ pub unsafe fn render2d_dummy(settings: &mut Settings) {
 }
 
 pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vector2<f32>) {
-    igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
-    igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
-    igBegin(c_str!("Compass").as_ptr(), &mut true, 0);
+    if settings.show_compass {
+        igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
+        igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
 
+        if igBegin(c_str!("Compass").as_ptr(), &mut settings.show_compass, 0) {
+            draw_compass(direction_camera);
+        }
+        igEnd();
 
+        igPopStyleVar(2);
+    }
+}
+
+unsafe fn draw_compass(direction_camera: Vector2<f32>) {
     let mut window_origin = ImVec2::zero();
     igGetCursorScreenPos(&mut window_origin);
 
@@ -72,9 +81,6 @@ pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vecto
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_center));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north_right));
     ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(ImVec4::new(0.0, 0.0, 1.0, 1.0)), false, 6.0);
-
-    igEnd();
-    igPopStyleVar(2);
 }
 
 fn get_angle(vec: Vector2<f32>) -> f32 {

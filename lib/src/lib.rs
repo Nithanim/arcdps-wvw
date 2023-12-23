@@ -33,6 +33,8 @@ static mut MATCHUP: Option<Matchup> = None;
 static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
+static mut IS_GAME: bool = false;
+
 pub static mut SETTINGS: Settings = Settings {
     show_objectives_overlay: false,
     show_current: false,
@@ -93,6 +95,15 @@ pub extern "C" fn nithanim_ui() {
             (&ICONS.as_ref()).unwrap(),
             data,
             &mut SETTINGS);
+    }
+}
+
+/**
+Returns true if the plugin is running in the game, false otherwise.
+ */
+pub fn is_game() -> bool {
+    unsafe {
+        IS_GAME
     }
 }
 

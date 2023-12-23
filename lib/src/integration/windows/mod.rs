@@ -15,7 +15,7 @@ use crate::integration::arcdps::*;
 
 pub use icon_loader::load_icon;
 use crate::hud::screen::set_screen_size;
-use crate::MUMBLE_LINK;
+use crate::{IS_GAME, MUMBLE_LINK};
 
 pub type GfxDevice = *const ID3D11Device;
 
@@ -33,6 +33,7 @@ pub unsafe extern "system" fn get_init_addr(
     mallocfn: *const c_void,
     freefn: *const c_void,
     d3dversion: u32) -> unsafe extern "system" fn() -> *const arcdps_exports {
+    IS_GAME = true;
     igSetCurrentContext(imguictx);
     igSetAllocatorFunctions(Some(std::mem::transmute(mallocfn)), Some(std::mem::transmute(freefn)), null_mut());
 

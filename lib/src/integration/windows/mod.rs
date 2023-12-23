@@ -2,7 +2,7 @@ pub mod icon_loader;
 
 use std::ffi::{c_char, c_void};
 use std::mem;
-use std::ptr::{null_mut};
+use std::ptr::{null, null_mut};
 use imgui_sys::{igSetAllocatorFunctions, igSetCurrentContext, ImGuiContext, ImVec2};
 use windows::Win32::Graphics::Direct3D11::ID3D11Device;
 use windows::Win32::Graphics::Dxgi::{DXGI_SWAP_CHAIN_DESC, IDXGISwapChain};
@@ -32,8 +32,13 @@ pub unsafe extern "system" fn get_init_addr(
     arcdll: HMODULE,
     mallocfn: *const c_void,
     freefn: *const c_void,
-    d3dversion: u32) -> unsafe extern "system" fn() -> *const arcdps_exports {
+    d3dversion: u32) -> *const c_void {
+    if (d3dversion != 11) {
+        eprintln!("Only DX11 supported!");
+        return null();
+    }
     IS_GAME = true;
+
     igSetCurrentContext(imguictx);
     igSetAllocatorFunctions(Some(std::mem::transmute(mallocfn)), Some(std::mem::transmute(freefn)), null_mut());
 
@@ -41,7 +46,7 @@ pub unsafe extern "system" fn get_init_addr(
 
     crate::nithanim_setup_internal(D3D11_DEVICE.as_ref().unwrap(), &mut |x| ());
 
-    mod_init
+    mod_init as *const c_void
 }
 
 pub static mut DXGI_SWAP_CHAIN: Option<IDXGISwapChain> = None;

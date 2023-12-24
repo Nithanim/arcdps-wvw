@@ -16,24 +16,11 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build
-        run: cargo build --package arcdps_wvw
+        run: cargo build --release --package arcdps_wvw
 
-      - name: DEBUG
-        run: |
-          echo -----
-          ls -l .
-          echo -----
-          ls -l target
-          echo -----
-          ls -l target/release
-          echo -----
-        shell: bash
-
-      #    - name: Run tests
-      #      run: cargo test --verbose
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: dll
-          path: target/release/
+          path: target/release/arcdps_wvw.dll
 

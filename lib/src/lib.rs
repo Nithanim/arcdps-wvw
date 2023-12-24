@@ -34,6 +34,7 @@ static mut OBJECTIVES: Option<Vec<ObjectiveDefinition>> = None;
 static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
 static mut IS_GAME: bool = false;
+static mut IS_IN_LOADING_SCREEN: bool = false;
 
 pub static mut SETTINGS: Settings = Settings {
     show_objectives_overlay: false,
@@ -43,6 +44,7 @@ pub static mut SETTINGS: Settings = Settings {
     show_blue: false,
     show_eternal: false,
     show_compass: false,
+    compass_lock: false,
 };
 
 pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;
@@ -104,6 +106,12 @@ Returns true if the plugin is running in the game, false otherwise.
 pub fn is_game() -> bool {
     unsafe {
         IS_GAME
+    }
+}
+
+pub fn is_in_loading_screen() -> bool {
+    unsafe {
+        IS_IN_LOADING_SCREEN
     }
 }
 

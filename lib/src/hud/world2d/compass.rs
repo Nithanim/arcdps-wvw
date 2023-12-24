@@ -1,15 +1,17 @@
 use std::f32::consts::PI;
 use c_str_macro::c_str;
-use imgui_sys::{igBegin, igDummy, igEnd, igGetColorU32Vec4, igGetCursorPos, igGetCursorScreenPos, igGetWindowDrawList, igGetWindowSize, igPopStyleVar, igPushStyleVarVec2, ImDrawList, ImDrawList_PathFillConvex, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiStyleVar, ImGuiStyleVar_FramePadding, ImGuiStyleVar_WindowPadding, ImVec2, ImVec4};
+use imgui_sys::{igBegin, igDummy, igEnd, igGetColorU32Vec4, igGetCursorPos, igGetCursorScreenPos, igGetWindowDrawList, igGetWindowSize, igPopStyleVar, igPushStyleVarVec2, ImDrawList, ImDrawList_PathFillConvex, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiStyleVar, ImGuiStyleVar_FramePadding, ImGuiStyleVar_WindowPadding, ImGuiWindowFlags, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoDecoration, ImGuiWindowFlags_NoInputs, ImGuiWindowFlags_NoNav, ImVec2, ImVec4};
 use mumblelink_reader::mumble_link::MumbleLinkData;
 use nalgebra::{Isometry2, Matrix3, min, Point2, Point3, Rotation2, Vector2};
 use once_cell::sync::Lazy;
+use crate::is_in_loading_screen;
 use crate::settings::Settings;
 
 pub unsafe fn render2d(ml: &MumbleLinkData, settings: &mut Settings) {
     let camera = Vector2::new(ml.camera.front[0], ml.camera.front[2]);
-    println!("LookDir: [{}, {}]", camera.x, camera.y);
-    render2d_internal(settings, camera);
+    if !is_in_loading_screen() {
+        render2d_internal(settings, camera);
+    }
 }
 
 pub unsafe fn render2d_dummy(settings: &mut Settings) {
@@ -23,12 +25,21 @@ pub unsafe fn render2d_dummy(settings: &mut Settings) {
     render2d_internal(settings, c);
 }
 
+const TRANSPARENT_WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
+    | ImGuiWindowFlags_NoInputs
+    | ImGuiWindowFlags_NoNav
+    | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
+
 pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vector2<f32>) {
     if settings.show_compass {
         igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
         igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
 
-        if igBegin(c_str!("Compass").as_ptr(), &mut settings.show_compass, 0) {
+        let window_flags: ImGuiWindowFlags = match settings.compass_lock {
+            true => TRANSPARENT_WINDOW_FLAGS,
+            false => 0,
+        };
+        if igBegin(c_str!("Compass").as_ptr(), &mut settings.show_compass, window_flags) {
             draw_compass(direction_camera);
         }
         igEnd();
@@ -44,7 +55,7 @@ unsafe fn draw_compass(direction_camera: Vector2<f32>) {
     let mut draw_area_start = ImVec2::zero();
     igGetCursorPos(&mut draw_area_start);
 
-    igDummy(ImVec2::new(200.0, 200.0));
+    igDummy(ImVec2::new(100.0, 100.0));
 
     let mut window_size = ImVec2::zero();
     igGetWindowSize(&mut window_size);

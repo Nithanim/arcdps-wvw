@@ -11,6 +11,7 @@ pub struct Settings {
     pub show_eternal: bool,
 
     pub show_compass: bool,
+    pub compass_lock: bool,
 }
 
 impl Default for Settings {
@@ -23,6 +24,7 @@ impl Default for Settings {
             show_blue: false,
             show_eternal: false,
             show_compass: false,
+            compass_lock: false,
         }
     }
 }
@@ -38,4 +40,5 @@ pub unsafe fn render_options(settings: &mut Settings) {
         igEndMenu();
     }
     igCheckbox(c_str!("Compass").as_ptr(), &mut settings.show_compass);
+    igCheckbox(c_str!("Compass lock").as_ptr(), &mut settings.compass_lock);
 }

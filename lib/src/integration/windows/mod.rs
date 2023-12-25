@@ -70,6 +70,8 @@ unsafe fn init_dxgi(device: *const c_void) {
 }
 
 unsafe extern "system" fn mod_init() -> *const arcdps_exports {
+    crate::settings::read_from_file();
+
     return &ARC_EXPORTS_STATIC;
 }
 
@@ -80,6 +82,7 @@ pub extern "system" fn get_release_addr() -> *const c_void {
 
 #[no_mangle]
 pub unsafe extern "system" fn mod_release() -> *mut c_void {
+    crate::settings::write_to_file();
     // winapi::um::wincon::FreeConsole();
     null_mut()
 }

@@ -14,7 +14,7 @@ use integration::{
     TextureIdType, TextureDataType,
 };
 use crate::integration::{GfxDevice, setup_mumble_link};
-use crate::settings::Settings;
+use crate::settings::{get_settings};
 
 mod integration;
 
@@ -35,17 +35,6 @@ static mut ICONS: Option<HashMap<icons::Icon, ImGuiIcon>> = None;
 
 static mut IS_GAME: bool = false;
 static mut IS_IN_LOADING_SCREEN: bool = false;
-
-pub static mut SETTINGS: Settings = Settings {
-    show_objectives_overlay: false,
-    show_current: false,
-    show_red: false,
-    show_green: false,
-    show_blue: false,
-    show_eternal: false,
-    show_compass: false,
-    compass_lock: false,
-};
 
 pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;
 
@@ -96,7 +85,7 @@ pub extern "C" fn nithanim_ui() {
             (&OBJECTIVES.as_ref()).unwrap(),
             (&ICONS.as_ref()).unwrap(),
             data,
-            &mut SETTINGS);
+            get_settings());
     }
 }
 

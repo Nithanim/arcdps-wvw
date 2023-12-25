@@ -31,15 +31,15 @@ const TRANSPARENT_WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackgroun
     | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
 
 pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vector2<f32>) {
-    if settings.show_compass {
+    if settings.compass.show {
         igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
         igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
 
-        let window_flags: ImGuiWindowFlags = match settings.compass_lock {
+        let window_flags: ImGuiWindowFlags = match settings.compass.lock {
             true => TRANSPARENT_WINDOW_FLAGS,
             false => 0,
         };
-        if igBegin(c_str!("Compass").as_ptr(), &mut settings.show_compass, window_flags) {
+        if igBegin(c_str!("Compass").as_ptr(), &mut settings.compass.show, window_flags) {
             draw_compass(direction_camera);
         }
         igEnd();

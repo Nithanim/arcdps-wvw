@@ -4,7 +4,7 @@ use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Surface;
 use imgui::sys::{igBegin, igEnd};
-use arcdps_wvw::{nithanim_setup, nithanim_ui, SETTINGS};
+use arcdps_wvw::{nithanim_setup, nithanim_ui};
 
 const TITLE: &str = "Test Window";
 
@@ -79,7 +79,7 @@ fn render_options() {
     unsafe {
         let a = CString::new("Options window").unwrap();
         igBegin(a.as_ptr(), null_mut(), 0);
-        arcdps_wvw::settings::render_options(&mut SETTINGS);
+        arcdps_wvw::settings::render_options();
         igEnd()
     }
 }

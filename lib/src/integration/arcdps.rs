@@ -1,7 +1,6 @@
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
 use crate::settings::render_options;
-use crate::SETTINGS;
 
 static mut filelog: *mut c_void = null_mut();
 
@@ -25,7 +24,7 @@ pub static mut ARC_EXPORTS_STATIC: arcdps_exports = arcdps_exports {
 };
 
 pub unsafe extern "C" fn options_end() -> usize {
-    render_options(&mut SETTINGS);
+    render_options();
     return 0;
 }
 

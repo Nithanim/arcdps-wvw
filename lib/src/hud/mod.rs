@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkReader};
-use crate::{icons, ImGuiIcon, is_game, MUMBLE_LINK, SETTINGS};
+use crate::{icons, ImGuiIcon, is_game, MUMBLE_LINK};
 use crate::api::objective_definition::ObjectiveDefinition;
 use crate::data::SharedData;
 use crate::settings::Settings;

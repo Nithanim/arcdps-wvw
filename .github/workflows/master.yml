@@ -18,6 +18,10 @@ jobs:
       - name: Build
         run: cargo build --release --package arcdps_wvw
 
+      - shell: bash
+        run: |
+          sha256sum target/release/arcdps_wvw.dll
+
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:

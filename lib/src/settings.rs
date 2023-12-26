@@ -1,5 +1,5 @@
 use std::io::ErrorKind;
-use imgui_sys::{igBeginMenu, igCheckbox, igEndMenu, igPopID, igPushIDInt, igSeparator, igText};
+use imgui_sys::{igBeginMenu, igCheckbox, igColorEdit3, igEndMenu, igPopID, igPushIDInt, igSeparator, igSliderFloat, igText};
 use c_str_macro::c_str;
 use serde_derive::{Deserialize, Serialize};
 
@@ -20,6 +20,9 @@ pub struct Settings {
 pub struct SettingsCompass {
     pub show: bool,
     pub lock: bool,
+    pub color_primary: [f32; 3],
+    pub color_secondary: [f32; 3],
+    pub opacity: f32,
 }
 
 pub static mut SETTINGS: Settings = Settings {
@@ -32,6 +35,9 @@ pub static mut SETTINGS: Settings = Settings {
     compass: SettingsCompass {
         show: false,
         lock: false,
+        color_primary: [1.0, 1.0, 1.0],
+        color_secondary: [0.0, 0.0, 0.0],
+        opacity: 1.0,
     },
 };
 
@@ -48,6 +54,9 @@ pub unsafe fn render_options() {
     igText(c_str!("Compass").as_ptr());
     igCheckbox(c_str!("Show").as_ptr(), &mut settings.compass.show);
     igCheckbox(c_str!("Lock").as_ptr(), &mut settings.compass.lock);
+    igColorEdit3(c_str!("Primary color").as_ptr(), settings.compass.color_primary.as_mut_ptr(), 0);
+    igColorEdit3(c_str!("Secondary color").as_ptr(), settings.compass.color_secondary.as_mut_ptr(), 0);
+    igSliderFloat(c_str!("Opacity").as_ptr(), &mut settings.compass.opacity, 0.0, 1.0, c_str!( "%.3f").as_ptr(), 0);
     igPopID();
 
     igSeparator();

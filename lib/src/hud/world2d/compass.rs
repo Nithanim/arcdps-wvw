@@ -5,7 +5,12 @@ use mumblelink_reader::mumble_link::MumbleLinkData;
 use nalgebra::{Isometry2, Matrix3, min, Point2, Point3, Rotation2, Vector2};
 use once_cell::sync::Lazy;
 use crate::is_in_loading_screen;
-use crate::settings::Settings;
+use crate::settings::{Settings, SettingsCompass};
+
+struct Colors {
+    primary: ImVec4,
+    secondary: ImVec4,
+}
 
 pub unsafe fn render2d(ml: &MumbleLinkData, settings: &mut Settings) {
     let camera = Vector2::new(ml.camera.front[0], ml.camera.front[2]);
@@ -40,7 +45,7 @@ pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vecto
             false => 0,
         };
         if igBegin(c_str!("Compass").as_ptr(), &mut settings.compass.show, window_flags) {
-            draw_compass(direction_camera);
+            draw_compass(&settings.compass, direction_camera);
         }
         igEnd();
 
@@ -48,7 +53,7 @@ pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vecto
     }
 }
 
-unsafe fn draw_compass(direction_camera: Vector2<f32>) {
+unsafe fn draw_compass(settings: &SettingsCompass, direction_camera: Vector2<f32>) {
     let mut window_origin = ImVec2::zero();
     igGetCursorScreenPos(&mut window_origin);
 
@@ -81,48 +86,49 @@ unsafe fn draw_compass(direction_camera: Vector2<f32>) {
     let base_matrix = Isometry2::new(draw_area_center, angle);
     let imgui_invert = Matrix3::new_nonuniform_scaling(&Vector2::new(1.0, -1.0)); // imgui y axis is opposite, so flip around y
 
+    let colors = Colors {
+        primary: ImVec4::new(settings.color_primary[0], settings.color_primary[1], settings.color_primary[2], settings.opacity),
+        secondary: ImVec4::new(settings.color_secondary[0], settings.color_secondary[1], settings.color_secondary[2], settings.opacity),
+    };
 
     let draw_list = igGetWindowDrawList();
 
     let matrix: Matrix3<f32> = base_matrix.to_matrix() * Matrix3::new_scaling(length_pin_north) * imgui_invert;
-    render_pin(&matrix, 1.0, draw_list);
+    render_pin(&matrix, 1.0, &colors, draw_list);
 
     let matrix: Matrix3<f32> = base_matrix.to_matrix() * Rotation2::new(PI / 2.0).to_homogeneous() * Matrix3::new_scaling(length_pin_north) * imgui_invert;
-    render_pin(&matrix, 0.6, draw_list);
+    render_pin(&matrix, 0.6, &colors, draw_list);
 
     let matrix: Matrix3<f32> = base_matrix.to_matrix() * Rotation2::new(PI / 2.0 * 2.0).to_homogeneous() * Matrix3::new_scaling(length_pin_north) * imgui_invert;
-    render_pin(&matrix, 0.6, draw_list);
+    render_pin(&matrix, 0.6, &colors, draw_list);
 
     let matrix: Matrix3<f32> = base_matrix.to_matrix() * Rotation2::new(PI / 2.0 * 3.0).to_homogeneous() * Matrix3::new_scaling(length_pin_north) * imgui_invert;
-    render_pin(&matrix, 0.6, draw_list);
+    render_pin(&matrix, 0.6, &colors, draw_list);
 }
 
-unsafe fn render_pin(matrix: &Matrix3<f32>, pin_size: f32, draw_list: *mut ImDrawList) {
+unsafe fn render_pin(matrix: &Matrix3<f32>, pin_size: f32, colors: &Colors, draw_list: *mut ImDrawList) {
     let compass_center = Point2::new(0.0, 0.0);
     let compass_north = Point2::new(0.0, pin_size);
     let w = 0.15;
     let compass_north_left = Point2::new(-w, w);
     let compass_north_right = Point2::new(w, w);
 
-    let color_light = ImVec4::new(1.0, 1.0, 1.0, 1.0);
-    let color_dark = ImVec4::new(0.1, 0.1, 0.1, 1.0);
-
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north_left));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_center));
-    ImDrawList_PathFillConvex(draw_list, igGetColorU32Vec4(color_light));
+    ImDrawList_PathFillConvex(draw_list, igGetColorU32Vec4(colors.primary));
 
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_center));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north_right));
-    ImDrawList_PathFillConvex(draw_list, igGetColorU32Vec4(color_dark));
+    ImDrawList_PathFillConvex(draw_list, igGetColorU32Vec4(colors.secondary));
 
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north_right));
-    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(color_light), false, 1.0);
+    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(colors.primary), false, 1.0);
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north));
     ImDrawList_PathLineTo(draw_list, to_imgui(&matrix, &compass_north_left));
-    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(color_dark), false, 1.0);
+    ImDrawList_PathStroke(draw_list, igGetColorU32Vec4(colors.secondary), false, 1.0);
 }
 
 fn get_angle(vec: Vector2<f32>) -> f32 {

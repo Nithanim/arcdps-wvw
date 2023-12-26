@@ -26,4 +26,15 @@ Find and copy them from the mingw64 files and place them alongside the dll in th
 If you are on windows, you should be able to build the dll with windows tools.
 You most likely need to either install gcc (mingw64 for windows) somehow or [use msvc](https://learn.microsoft.com/en-us/windows/dev-environment/rust/setup).
 
+## Ideas/todo
+
+* Step counter between fights
+* Save window positions
+* Get world id via apikey/input (because mumble link is **still** broken)
+* Do not query api if nothing needs the api
+* Show upgrades, tier and buff on map
+* Overlay HUD for objectives in looking direction
+* Visualize claim change on map
+* Share and display position on HUD of other players
+
 

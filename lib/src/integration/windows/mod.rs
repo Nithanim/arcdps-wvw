@@ -44,7 +44,7 @@ pub unsafe extern "system" fn get_init_addr(
 
     init_dxgi(id3dptr);
 
-    crate::nithanim_setup_internal(D3D11_DEVICE.as_ref().unwrap(), &mut |x| ());
+    crate::setup(D3D11_DEVICE.as_ref().unwrap(), &mut |x| ());
 
     mod_init as *const c_void
 }
@@ -83,6 +83,7 @@ pub extern "system" fn get_release_addr() -> *const c_void {
 #[no_mangle]
 pub unsafe extern "system" fn mod_release() -> *mut c_void {
     crate::settings::write_to_file();
+    crate::teardown();
     // winapi::um::wincon::FreeConsole();
     null_mut()
 }

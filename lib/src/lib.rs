@@ -41,10 +41,10 @@ pub(crate) static mut MUMBLE_LINK: Option<MumbleLinkHandler> = None;
 #[cfg(not(windows))]
 pub fn nithanim_setup(device: GfxDevice, textures: &mut imgui_glium_renderer::imgui::Textures<imgui_glium_renderer::Texture>) {
     let mut f = |x: imgui_glium_renderer::Texture| textures.insert(x);
-    nithanim_setup_internal(device, &mut f);
+    setup(device, &mut f);
 }
 
-pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mut F)
+pub(crate) fn setup<F>(device: GfxDevice, imgui_converter: &mut F)
     where
         F: FnMut(TextureDataType) -> TextureIdType {
     //imgui_sys::igSetCurrentContext()
@@ -71,6 +71,10 @@ pub(crate) fn nithanim_setup_internal<F>(device: GfxDevice, imgui_converter: &mu
 
         setup_mumble_link();
     }
+}
+
+pub(crate) fn teardown() {
+    data::shutdown();
 }
 
 

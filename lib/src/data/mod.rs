@@ -1,4 +1,6 @@
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::{Duration, Instant};
 use once_cell::sync::Lazy;
@@ -8,6 +10,12 @@ use crate::api::matchup::Matchup;
 pub static DATA: Lazy<Arc<Mutex<Option<SharedData>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 
 static mut HTTP_CLIENT: Option<reqwest::blocking::Client> = None;
+
+static mut SHUTDOWN: AtomicBool = AtomicBool::new(false);
+
+pub fn shutdown() {
+    unsafe { SHUTDOWN.store(true, Ordering::Relaxed) }
+}
 
 pub fn init() {
     unsafe {
@@ -34,6 +42,12 @@ pub fn init() {
             }
 
             thread::sleep(Duration::from_millis(9500));
+
+            unsafe {
+                if SHUTDOWN.load(Ordering::Relaxed) {
+                    break;
+                }
+            }
         }
     });
 }

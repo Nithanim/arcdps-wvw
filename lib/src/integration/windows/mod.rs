@@ -105,15 +105,6 @@ pub unsafe fn setup_mumble_link() {
         eprintln!("Unable to setup mumble link: {}", result1.err().unwrap())
     } else {
         MUMBLE_LINK = result1.ok();
-        std::thread::spawn(move || {
-            loop {
-                let handler = MUMBLE_LINK.as_ref().unwrap();
-                let linked_memory = handler.read().unwrap();
-                println!("{:?}", linked_memory);
-                //println!("{:?}", linked_memory.read_context_into_struct::<GuildwarsContext>());
-                std::thread::sleep(std::time::Duration::from_millis(5000));
-            }
-        });
     }
 }
 

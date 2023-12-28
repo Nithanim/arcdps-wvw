@@ -1,10 +1,13 @@
+mod world_id;
+
 use std::io::ErrorKind;
-use imgui_sys::{igBeginMenu, igCheckbox, igColorEdit3, igEndMenu, igPopID, igPushIDInt, igSeparator, igSliderFloat, igText};
+use imgui_sys::{igBeginMenu, igButton, igCheckbox, igColorEdit3, igEndMenu, igInputInt, igIsItemHovered, igPopID, igPushIDInt, igSeparator, igSetTooltip, igSliderFloat, igText, ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenDisabled, ImGuiInputTextFlags, ImGuiInputTextFlags_, ImGuiInputTextFlags_ReadOnly, ImVec2};
 use c_str_macro::c_str;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Settings {
+    pub world_id: i32,
     pub show_objectives_overlay: bool,
 
     pub show_current: bool,
@@ -26,6 +29,7 @@ pub struct SettingsCompass {
 }
 
 pub static mut SETTINGS: Settings = Settings {
+    world_id: 0,
     show_objectives_overlay: false,
     show_current: false,
     show_red: false,
@@ -49,6 +53,13 @@ pub fn get_settings<'a>() -> &'a mut Settings {
 
 pub unsafe fn render_options() {
     let settings = get_settings();
+
+    igPushIDInt(3);
+    igText(c_str!("General").as_ptr());
+    world_id::render_options_world_id(settings);
+    igPopID();
+
+    igSeparator();
 
     igPushIDInt(1);
     igText(c_str!("Compass").as_ptr());

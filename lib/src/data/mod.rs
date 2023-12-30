@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use once_cell::sync::Lazy;
 use crate::api::matchup::Matchup;
 use crate::data::http_client::get_http_client;
+use crate::settings::get_settings;
 
 pub static DATA: Lazy<Arc<Mutex<Option<SharedData>>>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 
@@ -50,7 +51,7 @@ pub fn init() {
 }
 
 fn fetch_matchup() -> Result<Matchup, String> { // Change Value to your specific type
-    let url = "https://api.guildwars2.com/v2/wvw/matches?world=2204";
+    let url = format!("https://api.guildwars2.com/v2/wvw/matches?world={}", get_world_id());
 
 
     let client = match get_http_client() {
@@ -68,6 +69,12 @@ fn fetch_matchup() -> Result<Matchup, String> { // Change Value to your specific
 
     let json_decoded: Result<Matchup, _> = response.json();
     json_decoded.map_err(|e| e.to_string())
+}
+
+fn get_world_id() -> i32 {
+    unsafe {
+        core::ptr::read_volatile(&get_settings().world_id) // This is not thread-safe but maybe works.
+    }
 }
 
 pub struct SharedData {

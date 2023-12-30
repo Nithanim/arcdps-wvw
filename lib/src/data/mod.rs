@@ -24,7 +24,18 @@ pub fn init() {
 
     thread::spawn(move || {
         loop {
-            let matchup = fetch_matchup();
+            let world_id = get_world_id();
+
+            let matchup: Result<Matchup, String>;
+            if world_id > 1000 {
+                matchup = fetch_matchup(world_id);
+            } else {
+                let mut data_lock = data_clone.lock().unwrap();
+                *data_lock = None;
+                drop(data_lock);
+                continue;
+            }
+
 
             if matchup.is_err() {
                 eprintln!("Error updating data! {}", matchup.unwrap_err());
@@ -50,8 +61,8 @@ pub fn init() {
     });
 }
 
-fn fetch_matchup() -> Result<Matchup, String> { // Change Value to your specific type
-    let url = format!("https://api.guildwars2.com/v2/wvw/matches?world={}", get_world_id());
+fn fetch_matchup(world_id: i32) -> Result<Matchup, String> { // Change Value to your specific type
+    let url = format!("https://api.guildwars2.com/v2/wvw/matches?world={}", world_id);
 
 
     let client = match get_http_client() {

@@ -118,18 +118,20 @@ unsafe fn render_pre(title: &str, data: &Data, shared_data: Option<&SharedData>,
 }
 
 fn get_last_updated_text(shared_data: Option<&SharedData>) -> String {
-    let text: String;
     if shared_data.is_some() {
         let data_timestamp = shared_data.unwrap().timestamp;
         let now = Instant::now();
 
         let diff = now.duration_since(data_timestamp);
 
-        text = format!("Last update: {} sec", diff.as_secs());
+        if diff.as_secs() > 11 {
+            format!("Last update: {} sec", diff.as_secs())
+        } else {
+            String::new()
+        }
     } else {
-        text = String::from("No data");
+        String::from("No data")
     }
-    text
 }
 
 fn filter_objective_defs_by_map<'a>(interesting_objective_definitions: &Vec<&'a ObjectiveDefinition>, map_type: &str) -> Vec<&'a ObjectiveDefinition> {

@@ -1,14 +1,21 @@
 use once_cell::sync::OnceCell;
-use reqwest::blocking::Client;
+use reqwest::blocking::Client as BlockingHttpClient;
+use reqwest::Client as AsyncHttpClient;
 use rustls::{ClientConfig, RootCertStore};
 
-static HTTP_CLIENT: OnceCell<Option<Client>> = OnceCell::new();
+static BLOCKING_CLIENT: OnceCell<Option<BlockingHttpClient>> = OnceCell::new();
+static ASYNC_CLIENT: OnceCell<Option<AsyncHttpClient>> = OnceCell::new();
 
-pub fn get_http_client() -> Option<&'static Client> {
-    HTTP_CLIENT.get_or_init(create_http_client).as_ref()
+pub fn get_http_client() -> Option<&'static BlockingHttpClient> {
+    BLOCKING_CLIENT.get_or_init(create_blocking_client).as_ref()
 }
 
-fn create_http_client() -> Option<Client> {
+pub fn get_async_client() -> Option<&'static AsyncHttpClient> {
+    ASYNC_CLIENT.get_or_init(create_async_client).as_ref()
+}
+
+
+fn create_blocking_client() -> Option<BlockingHttpClient> {
     let roots: RootCertStore = match get_cert_store() {
         Some(value) => value,
         None => {
@@ -19,7 +26,24 @@ fn create_http_client() -> Option<Client> {
     let builder = get_client_config(roots);
 
 
-    Some(Client::builder()
+    Some(BlockingHttpClient::builder()
+        .use_preconfigured_tls(builder)
+        .build()
+        .unwrap())
+}
+
+fn create_async_client() -> Option<AsyncHttpClient> {
+    let roots: RootCertStore = match get_cert_store() {
+        Some(value) => value,
+        None => {
+            return None;
+        }
+    };
+
+    let builder = get_client_config(roots);
+
+
+    Some(AsyncHttpClient::builder()
         .use_preconfigured_tls(builder)
         .build()
         .unwrap())

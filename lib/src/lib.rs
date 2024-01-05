@@ -13,6 +13,7 @@ use crate::api::objective_definition::ObjectiveDefinition;
 use integration::{
     TextureIdType, TextureDataType,
 };
+use crate::data::get_shared_data;
 use crate::integration::{GfxDevice, setup_mumble_link};
 use crate::settings::{get_settings};
 
@@ -27,6 +28,7 @@ pub mod settings;
 pub mod hud;
 
 mod helpers;
+mod utils;
 
 
 static mut MATCHUP: Option<Matchup> = None;
@@ -50,7 +52,7 @@ pub(crate) fn setup<F>(device: GfxDevice, imgui_converter: &mut F)
     //imgui_sys::igSetCurrentContext()
     //imgui_sys::igSetAllocatorFunctions()
 
-    data::init();
+    data::setup();
 
     let matchup: Matchup = serde_json::from_str(include_str!("../resources/cache/matchup.json")).unwrap();
     let objectives: Vec<ObjectiveDefinition> = serde_json::from_str(include_str!("../resources/cache/objectives.json")).unwrap();
@@ -80,9 +82,8 @@ pub(crate) fn teardown() {
 
 #[no_mangle]
 pub extern "C" fn nithanim_ui() {
-    let lock_result = data::DATA.lock();
-    let mutex = lock_result.unwrap();
-    let data = mutex.as_ref();
+    data::tick();
+    let data = get_shared_data();
 
     unsafe {
         hud::render(

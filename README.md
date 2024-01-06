@@ -29,12 +29,12 @@ You most likely need to either install gcc (mingw64 for windows) somehow or [use
 ## Ideas/todo
 
 * Step counter between fights
-* Save window positions
-* Get world id via apikey/input (because mumble link is **still** broken)
-* Do not query api if nothing needs the api
 * Show upgrades, tier and buff on map
 * Overlay HUD for objectives in looking direction
 * Visualize claim change on map
 * Share and display position on HUD of other players
+* Second-squad helper
+  * One person in second squad gathers data
+  * Commander in main squad has a similar overview like for their main squad
 
 

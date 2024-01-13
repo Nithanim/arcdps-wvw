@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use mumblelink_reader::mumble_link::{MumbleLinkData, MumbleLinkReader};
-use crate::{icons, ImGuiIcon, is_game, MUMBLE_LINK};
+use crate::{icons, ImGuiIcon, is_game, is_in_loading_screen, MUMBLE_LINK};
 use crate::api::objective_definition::ObjectiveDefinition;
 use crate::data::SharedData;
 use crate::settings::Settings;
@@ -12,7 +12,7 @@ mod world2d;
 
 pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
     let ml = get_mumble_link();
-    if ml.is_some() {
+    if ml.is_some() && !is_in_loading_screen() {
         world3d::render_hud(settings, ml.as_ref().unwrap());
     }
     world2d::render_map(objectives, icons, shared_data, settings);

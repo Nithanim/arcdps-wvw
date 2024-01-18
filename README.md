@@ -36,5 +36,8 @@ You most likely need to either install gcc (mingw64 for windows) somehow or [use
 * Second-squad helper
   * One person in second squad gathers data
   * Commander in main squad has a similar overview like for their main squad
-
+* Voice invite helper
+  * Define invite text
+  * Button to copy text
+  * Button to automatically post
 

@@ -8,8 +8,10 @@ pub use shared_data_fetcher::shutdown;
 pub use shared_data_fetcher::tick;
 pub use shared_data_fetcher::get_shared_data;
 use crate::api::matchup::Matchup;
+use crate::api::map_api::Map;
 
 pub struct SharedData {
     pub matchup: Result<Matchup, ()>,
+    pub maps: Option<Vec<Map>>,
     pub timestamp: Instant,
 }

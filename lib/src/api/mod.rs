@@ -5,3 +5,4 @@ pub mod owner;
 pub mod world_map;
 pub mod world_map_type;
 pub mod world_info;
+pub mod map_api;

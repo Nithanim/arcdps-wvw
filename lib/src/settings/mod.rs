@@ -17,6 +17,7 @@ pub struct Settings {
     pub show_eternal: bool,
 
     pub compass: SettingsCompass,
+    pub debug: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -43,6 +44,7 @@ pub static mut SETTINGS: Settings = Settings {
         color_secondary: [0.0, 0.0, 0.0],
         opacity: 1.0,
     },
+    debug: false,
 };
 
 pub fn get_settings<'a>() -> &'a mut Settings {
@@ -86,6 +88,11 @@ pub unsafe fn render_options() {
     igPushIDInt(3);
     igText(c_str!("Overlay").as_ptr());
     igCheckbox(c_str!("Show").as_ptr(), &mut settings.show_objectives_overlay);
+    igPopID();
+
+    igPushIDInt(4);
+    igText(c_str!("Debug").as_ptr());
+    igCheckbox(c_str!("Show").as_ptr(), &mut settings.debug);
     igPopID();
 }
 

@@ -8,11 +8,16 @@ pub struct ObjectiveDefinition {
     pub type_: Type,
     pub map_id: i32,
     pub map_type: String,
+    /**
+    0: - to + is left to right on map (x),
+    1: - to + is top to bottom on map (z)
+    2: - to + is higher (hill) to lower (water-level) (y) | water-level is 0; above is negative
+     */
     pub coord: Option<[f32; 3]>,
 }
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub enum Type {
     #[serde(alias = "Spawn")]
     SPAWN,

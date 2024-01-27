@@ -4,12 +4,24 @@ use std::sync::atomic::Ordering;
 use std::sync::mpsc::Receiver;
 use std::thread;
 use std::time::{Duration, Instant};
+use once_cell::sync::Lazy;
+use crate::api::map_api::Map;
 use crate::api::matchup::Matchup;
 use crate::data::http_client::{get_async_client};
 use crate::data::{SharedData};
 use crate::settings::{get_settings, Settings};
 use crate::utils::{drop_static_mut_option, swap_static_mut_option};
 
+static MAPS: Lazy<Vec<Map>> = Lazy::new(|| {
+    let bytes = include_bytes!("../../resources/cache/maps.json");
+    let r = serde_json::from_slice::<Vec<Map>>(bytes);
+    match r {
+        Ok(o) => o,
+        Err(e) => {
+            panic!("ERROR: {}", e);
+        }
+    }
+});
 static mut DATA: Option<SharedData> = None;
 
 static mut RUNTIME: Option<tokio::runtime::Runtime> = None;
@@ -115,6 +127,7 @@ pub async fn download_and_get_data_async() -> Option<SharedData> {
     } else {
         let new_data = SharedData {
             matchup: matchup.map_err(|_| ()),
+            maps: Some(MAPS.clone()),
             timestamp: Instant::now(),
         };
 

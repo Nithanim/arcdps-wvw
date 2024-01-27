@@ -112,9 +112,8 @@ unsafe fn render_pre(title: &str, data: &Data, shared_data: Option<&SharedData>,
         igText(string.as_ptr());
 
         render_map(&data.objective_definitions, data.icons, &data.objective_states);
-
-        igEnd();
     }
+    igEnd();
 }
 
 fn get_last_updated_text(shared_data: Option<&SharedData>) -> String {

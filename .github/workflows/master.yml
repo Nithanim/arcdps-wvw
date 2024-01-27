@@ -32,6 +32,33 @@ jobs:
         run: |
           sha256sum target/release/arcdps_wvw.dll
 
+      - name: Push archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          git config --global user.name 'Github Actions Bot'
+          git config --global user.email 'actions@users.noreply.github.com'
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:"
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+          
+          url="$(git remote get-url origin)"
+          baserepo="$(pwd)"
+          
+          cd /tmp
+          echo "Cloning artifacts branch"
+          git clone --single-branch --branch artifacts "$url" artifacts
+          cd artifacts
+          
+          echo "Copy built artifact"
+          cp "${baserepo}/target/release/arcdps_wvw.dll" .
+          
+          git add .
+          git commit -m "Update artifacts"
+          
+          echo "Pushing"
+          git push 
+
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:

@@ -62,7 +62,7 @@ pub fn setup() {
                 unsafe {
                     if RUNTIME.is_some() {
                         let result = RUNTIME.as_ref().unwrap().block_on(future);
-                        channel_sender.send(result);
+                        let _ = channel_sender.send(result);
                     }
                 }
 

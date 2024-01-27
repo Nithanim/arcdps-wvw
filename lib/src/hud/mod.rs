@@ -35,7 +35,7 @@ fn get_mumble_link() -> Option<MumbleLinkData> {
         if handler.is_some() {
             let linked_memory = handler.unwrap().read().unwrap();
 
-            if linked_memory.name == "Guild Wars 2" && world3d::get_current_map_id(&linked_memory) != 0 {
+            if linked_memory.name == "Guild Wars 2" && world3d::helpers::get_current_map_id(&linked_memory) != 0 {
                 return Some(linked_memory);
             }
         }

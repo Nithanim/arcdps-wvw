@@ -8,6 +8,7 @@ static OBJECTIVE_KEEP: Lazy<ImageData> = Lazy::new(|| load_image_file(include_by
 static OBJECTIVE_TOWER: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Tower.png")));
 static OBJECTIVE_CAMP: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Camp.png")));
 static OBJECTIVE_SENTRY: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Objective_Castle.png")));
+static BUFF_RIGHTEOUS_INDIGNATION: Lazy<ImageData> = Lazy::new(|| load_image_file(include_bytes!("../resources/icons/Righteous_Indignation.png")));
 
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
 pub enum Icon {
@@ -16,6 +17,7 @@ pub enum Icon {
     ObjectiveTower,
     ObjectiveCamp,
     ObjectiveSentry,
+    BuffRighteousIndignation,
 }
 
 impl Icon {
@@ -26,6 +28,7 @@ impl Icon {
             Icon::ObjectiveTower => OBJECTIVE_TOWER.deref(),
             Icon::ObjectiveCamp => OBJECTIVE_CAMP.deref(),
             Icon::ObjectiveSentry => OBJECTIVE_SENTRY.deref(),
+            Icon::BuffRighteousIndignation => BUFF_RIGHTEOUS_INDIGNATION.deref(),
         }
     }
 }

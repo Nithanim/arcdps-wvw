@@ -14,7 +14,7 @@ mod world2d;
 pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
     let ml = get_mumble_link();
     if ml.is_some() && !is_in_loading_screen() {
-        world3d::render_hud(settings, ml.as_ref().unwrap(), shared_data, objectives);
+        world3d::render_hud(settings, ml.as_ref().unwrap(), icons, shared_data, objectives);
 
         debug::render_debug(settings, ml.as_ref().unwrap());
     }

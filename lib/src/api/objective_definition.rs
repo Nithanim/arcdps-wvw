@@ -13,9 +13,10 @@ pub struct ObjectiveDefinition {
     1: - to + is top to bottom on map (z)
     2: - to + is higher (hill) to lower (water-level) (y) | water-level is 0; above is negative
      */
-    pub coord: Option<[f32; 3]>,
+    pub coord: Option<ContinentCoordinates>,
 }
 
+pub type ContinentCoordinates = [f32; 3];
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub enum Type {

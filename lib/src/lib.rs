@@ -65,7 +65,9 @@ pub(crate) fn setup<F>(device: GfxDevice, imgui_converter: &mut F)
             icons::Icon::ObjectiveKeep,
             icons::Icon::ObjectiveTower,
             icons::Icon::ObjectiveCamp,
-            icons::Icon::ObjectiveSentry, ] {
+            icons::Icon::ObjectiveSentry,
+            icons::Icon::BuffRighteousIndignation,
+        ] {
             let result = integration::load_icon(icon, device, imgui_converter);
             map.insert(icon, result.unwrap());
         }

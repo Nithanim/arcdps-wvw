@@ -10,14 +10,13 @@ use crate::api::matchup::Matchup;
 use crate::api::objective_definition::{ContinentCoordinates, ObjectiveDefinition};
 use crate::data::SharedData;
 use crate::hud::{screen};
-use crate::hud::world3d::graphics_uniform::GraphicsUniform;
-use crate::hud::world3d::helpers;
+use crate::hud::world3d::graphics_uniform::{get_view_projection_matrix, GraphicsUniform};
 use crate::hud::world3d::helpers::get_current_map_id;
 use crate::settings::Settings;
 
 pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, objective_definitions: &Vec<ObjectiveDefinition>) {
     let screen_size = screen::get_screen_size();
-    let view_projection = helpers::get_view_projection_matrix(&ml);
+    let view_projection = get_view_projection_matrix(&ml);
 
     if settings.show_objectives_overlay {
         let gu = GraphicsUniform {
@@ -71,7 +70,7 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                         let map_coordinates = continent_to_map_coordinates(map, continent_coords);
 
 
-                        let target = Point3::new(map_coordinates[0] * inch_to_meter, y, -map_coordinates[1] * inch_to_meter);
+                        let target = Point3::new(map_coordinates[0] * inch_to_meter, y, map_coordinates[1] * inch_to_meter);
 
                         let distance_squared = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar[0], avatar[2]));
                         let distance_bay_to_spawn_camp_squared = 171185460.0;
@@ -119,7 +118,7 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
 
                                 {
                                     igSetCursorScreenPos(ImVec2::new(imgui_coords.x, imgui_coords.y + line_height_with_spacing * line as f32));
-                                    let coordinates_string = CString::new(format!("{},{}", map_coordinates[0], -map_coordinates[1])).unwrap();
+                                    let coordinates_string = CString::new(format!("{},{}", map_coordinates[0], map_coordinates[1])).unwrap();
                                     igText(coordinates_string.as_ptr());
                                     line += 1;
                                 }

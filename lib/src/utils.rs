@@ -16,18 +16,16 @@ pub fn swap_static_mut_option<T>(reference: &mut Option<T>, new: Option<T>) {
 }
 
 pub fn get_mumble_link_camera_vec(ml: &MumbleLinkData) -> Vector3<f32> {
-    let point = mumble_link_to_map_coordinates(ml.camera.front);
-    Vector3::new(point.x, point.y, point.z)
+    let vec = ml.camera.front;
+    let inch_to_meter = 0.0254;
+    let meter_to_inch = 1.0 / inch_to_meter;
+    Vector3::new(vec[0] * meter_to_inch, vec[1] * meter_to_inch, -vec[2] * meter_to_inch)
 }
 
 pub fn get_mumble_link_avatar_position(ml: &MumbleLinkData) -> Point3<f32> {
-    mumble_link_to_map_coordinates(ml.avatar.position)
-}
-
-pub fn mumble_link_to_map_coordinates(vec: Vector3D) -> Point3<f32> {
+    let p = ml.avatar.position;
     let inch_to_meter = 0.0254;
     let meter_to_inch = 1.0 / inch_to_meter;
-
-    Point3::new(vec[0] * meter_to_inch, vec[1] * meter_to_inch, -vec[2] * meter_to_inch)
+    Point3::new(p[0] * meter_to_inch, p[1] * meter_to_inch, -p[2] * meter_to_inch)
 }
 

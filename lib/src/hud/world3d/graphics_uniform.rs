@@ -3,6 +3,7 @@ use imgui_sys::ImVec2;
 use mumblelink_reader::mumble_link::MumbleLinkData;
 use nalgebra::{Const, Isometry3, OMatrix, Perspective3, Point2, Point3, U4, Vector3, Vector4};
 use crate::mumble::MumbleLinkIdentity;
+use crate::utils::{get_mumble_link_avatar_position, get_mumble_link_camera_vec};
 
 pub struct GraphicsUniform {
     pub(crate) screen_size: ImVec2,
@@ -27,8 +28,8 @@ impl GraphicsUniform {
 }
 
 fn calc_view_matrix(ml: &MumbleLinkData) -> Isometry3<f32> {
-    let camera_pos: Point3<f32> = Point3::new(ml.camera.position[0], ml.camera.position[1], -ml.camera.position[2]);
-    let camera_vec: Vector3<f32> = Vector3::new(ml.camera.front[0], ml.camera.front[1], -ml.camera.front[2]);
+    let camera_pos: Point3<f32> = get_mumble_link_avatar_position(ml);
+    let camera_vec: Vector3<f32> = get_mumble_link_camera_vec(ml);
     let camera_target: Point3<f32> = camera_pos + camera_vec;
 
     Isometry3::look_at_rh(&camera_pos, &camera_target, &Vector3::y())

@@ -13,6 +13,7 @@ use crate::hud::{screen};
 use crate::hud::world3d::graphics_uniform::{get_view_projection_matrix, GraphicsUniform};
 use crate::hud::world3d::helpers::get_current_map_id;
 use crate::settings::Settings;
+use crate::utils::get_mumble_link_avatar_position;
 
 pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, objective_definitions: &Vec<ObjectiveDefinition>) {
     let screen_size = screen::get_screen_size();
@@ -32,8 +33,7 @@ pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<
             if let Ok(matchup) = &shared_data.matchup {
                 let map = shared_data.maps.as_ref().unwrap().iter().find(|e| e.id == current_map_id);
                 if let Some(map) = map {
-                    let y = ml.avatar.position[1];
-                    render_objectives(gu, current_map_id, icons, matchup, objective_definitions, y, map, ml.avatar.position);
+                    render_objectives(gu, current_map_id, icons, matchup, objective_definitions, map, get_mumble_link_avatar_position(ml));
                 }
             }
         }
@@ -53,7 +53,7 @@ pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<
     }
 }
 
-fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<icons::Icon, ImGuiIcon>, matchup: &Matchup, objective_definitions: &Vec<ObjectiveDefinition>, y: f32, map: &api::map_api::Map, avatar: Vector3D) {
+fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<icons::Icon, ImGuiIcon>, matchup: &Matchup, objective_definitions: &Vec<ObjectiveDefinition>, map: &api::map_api::Map, avatar: Point3<f32>) {
     let current = OffsetDateTime::now_utc();
 
 
@@ -64,18 +64,18 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                 let objective_definition = get_objective_definition(&obj.id, objective_definitions);
 
                 if let Some(objective_definition) = objective_definition {
-                    let inch_to_meter = 0.0254;
-
                     if let Some(continent_coords) = objective_definition.coord {
                         let map_coordinates = continent_to_map_coordinates(map, continent_coords);
 
 
-                        let target = Point3::new(map_coordinates[0] * inch_to_meter, y, map_coordinates[1] * inch_to_meter);
+                        let target = Point3::new(map_coordinates[0], avatar.y, map_coordinates[1]);
 
-                        let distance_squared = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar[0], avatar[2]));
-                        let distance_bay_to_spawn_camp_squared = 171185460.0;
+                        let distance_squared = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar.x, avatar.z));
+                        let distance_bay_to_spawn_camp_squared = 171185460.0 * 1.5;
                         if distance_squared > distance_bay_to_spawn_camp_squared {
                             // Don't render if far away
+                            return;
+                        } else if distance_squared < 1000.0_f32.powi(2) {
                             return;
                         }
 

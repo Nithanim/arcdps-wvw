@@ -25,7 +25,7 @@ pub fn setup() {
     }
 }
 
-pub fn teardown() {
+pub fn shutdown() {
     unsafe {
         drop_static_mut_option(&mut RUNTIME);
     }

@@ -1,176 +1,106 @@
 use std::sync::{mpsc};
 use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
-use std::sync::mpsc::Receiver;
-use std::thread;
-use std::time::{Duration, Instant};
-use once_cell::sync::Lazy;
-use crate::api::map_api::Map;
-use crate::api::matchup::Matchup;
-use crate::data::http_client::{get_async_client};
-use crate::data::{SharedData};
+use std::sync::mpsc::{Receiver, Sender};
+use std::time::{Instant};
+use crate::data::{SharedData, threads};
+use crate::data::shared_data_fetcher_thread::download_and_get_data_async;
 use crate::settings::{get_settings, Settings};
 use crate::utils::{drop_static_mut_option, swap_static_mut_option};
-
-static MAPS: Lazy<Vec<Map>> = Lazy::new(|| {
-    let bytes = include_bytes!("../../resources/cache/maps.json");
-    let r = serde_json::from_slice::<Vec<Map>>(bytes);
-    match r {
-        Ok(o) => o,
-        Err(e) => {
-            panic!("ERROR: {}", e);
-        }
-    }
-});
-static mut DATA: Option<SharedData> = None;
 
 static mut RUNTIME: Option<tokio::runtime::Runtime> = None;
 static SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 static mut RECEIVER: Option<Receiver<Option<SharedData>>> = None;
 
+static mut SHARED_DATA_FETCHER: Option<SharedDataFetcher> = None;
+
 pub fn get_shared_data() -> Option<&'static SharedData> {
     unsafe {
-        DATA.as_ref()
+        SHARED_DATA_FETCHER.as_ref().and_then(|c| c.shared_data.as_ref())
+    }
+}
+
+struct SharedDataFetcher {
+    receiver: Receiver<Option<SharedData>>,
+    sender: Sender<Option<SharedData>>,
+    last_fetch: Option<Instant>,
+    currently_fetching: bool,
+    shared_data: Option<SharedData>,
+}
+
+impl SharedDataFetcher {
+    fn tick(&'static mut self) {
+        match self.receiver.try_recv() {
+            Ok(data) => {
+                self.shared_data = data;
+                self.currently_fetching = false;
+                self.last_fetch = Some(Instant::now());
+            }
+            Err(_) => {}
+        }
+
+        if settings_need_data(get_settings()) {
+            if !self.currently_fetching {
+                match self.last_fetch {
+                    None => self.do_fetch(),
+                    Some(last_fetch) => {
+                        let millis_elapsed = last_fetch.elapsed().as_millis() as u64;
+                        if millis_elapsed > 2800 {
+                            self.do_fetch();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn do_fetch(&'static mut self) {
+        self.currently_fetching = true;
+        threads::spawn(self.do_fetch_());
+    }
+
+    async fn do_fetch_(&mut self) {
+        let data = download_and_get_data_async().await;
+        self.sender.send(data);
     }
 }
 
 
-pub fn setup() {
+pub fn tick() {
     unsafe {
-        SHUTDOWN.store(false, Ordering::Relaxed);
-        RUNTIME = Some(tokio::runtime::Builder::new_current_thread()
-            .enable_io()
-            .enable_time()
-            .build()
-            .unwrap());
-    }
-
-    let (channel_sender, channel_receiver) = mpsc::channel::<Option<SharedData>>();
-
-    unsafe {
-        RECEIVER = Some(channel_receiver);
-    }
-
-    thread::spawn(move || {
-        // TODO make this whole thing not shitty and use the async worker directly
-        // The fun thing is that this breaks randomly
-
-        loop {
-            if settings_need_data(get_settings()) {
-                let started_at = Instant::now();
-
-                let future = download_and_get_data_async();
-                // TODO make this not shitty but this async result stuff was too complicated
-                unsafe {
-                    if RUNTIME.is_some() {
-                        let result = RUNTIME.as_ref().unwrap().block_on(future);
-                        let _ = channel_sender.send(result);
-                    }
-                }
-
-                let time_to_wait = 2800 - started_at.elapsed().as_millis() as u64;
-                if time_to_wait > 1 {
-                    thread::sleep(Duration::from_millis(time_to_wait));
-                }
-            } else {
-                thread::sleep(Duration::from_secs(3));
-            }
-            if SHUTDOWN.load(Ordering::Relaxed) {
-                println!("WvW: shutdown worker thread");
-                break;
+        match &mut SHARED_DATA_FETCHER {
+            None => {}
+            Some(shared_data_fetcher) => {
+                shared_data_fetcher.tick();
             }
         }
-    });
+    }
+}
+
+pub fn setup() {
+    let (channel_sender, channel_receiver) = mpsc::channel::<Option<SharedData>>();
+    unsafe {
+        SHARED_DATA_FETCHER = Some(SharedDataFetcher {
+            sender: channel_sender,
+            receiver: channel_receiver,
+            last_fetch: None,
+            currently_fetching: false,
+            shared_data: None,
+        });
+    }
 }
 
 pub fn shutdown() {
     unsafe {
-        SHUTDOWN.store(true, Ordering::Relaxed);
-
         // TODO All this nonsense around static mut vars is inherently not correctly managed and should be replaced
         // But for GW2 this has to suffice for now.
-        drop_static_mut_option(&mut RUNTIME);
-        drop_static_mut_option(&mut RECEIVER);
+
+        // THIS IS CURRENTLY NOT SAFE SINCE THE ASYNC MIGHT BE DOING STUFF AND MIGHT REFERENCE SOMETHING, MAYBE
+        drop_static_mut_option(&mut SHARED_DATA_FETCHER);
     }
-}
-
-pub fn tick() {
-    unsafe {
-        match &RECEIVER {
-            None => {}
-            Some(receiver) => {
-                match receiver.try_recv() {
-                    Ok(data) => {
-                        unsafe {
-                            swap_static_mut_option(&mut DATA, data);
-                        }
-                    }
-                    Err(_) => {}
-                }
-            }
-        }
-    }
-}
-
-
-pub async fn download_and_get_data_async() -> Option<SharedData> {
-    let world_id = get_world_id();
-
-    let matchup: Result<Matchup, String>;
-    if world_id > 1000 {
-        matchup = fetch_matchup_async(world_id).await;
-    } else {
-        return None;
-    }
-
-
-    if matchup.is_err() {
-        eprintln!("Error updating data! {}", matchup.unwrap_err());
-        return None;
-    } else {
-        let new_data = SharedData {
-            matchup: matchup.map_err(|_| ()),
-            maps: Some(MAPS.clone()),
-            timestamp: Instant::now(),
-        };
-
-        return Some(new_data);
-    }
-}
-
-async fn fetch_matchup_async(world_id: i32) -> Result<Matchup, String> { // Change Value to your specific type
-    let url = format!("https://api.guildwars2.com/v2/wvw/matches?world={}", world_id);
-
-
-    let client = match get_async_client() {
-        Some(c) => c,
-        None => return Err("Http client not available!".to_string())
-    };
-
-    let result = client.get(url).send().await;
-
-    // This weirdly can result in a 404 with
-    //{
-    //   "text": "world not currently in a match"
-    // }
-
-    let response;
-    match result {
-        Ok(d) => response = d,
-        Err(e) => return Err(e.to_string()),
-    }
-
-    let json_decoded: Result<Matchup, _> = response.json().await;
-    json_decoded.map_err(|e| e.to_string())
 }
 
 fn settings_need_data(settings: &Settings) -> bool {
     settings.show_red || settings.show_green || settings.show_blue || settings.show_eternal || settings.show_objectives_overlay
 }
 
-fn get_world_id() -> i32 {
-    unsafe {
-        core::ptr::read_volatile(&get_settings().world_id) // This is not thread-safe but maybe works.
-    }
-}

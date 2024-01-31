@@ -53,6 +53,9 @@ pub fn setup() {
     }
 
     thread::spawn(move || {
+        // TODO make this whole thing not shitty and use the async worker directly
+        // The fun thing is that this breaks randomly
+
         loop {
             if settings_need_data(get_settings()) {
                 let started_at = Instant::now();
@@ -66,14 +69,15 @@ pub fn setup() {
                     }
                 }
 
-                let time_to_wait = 9800 - started_at.elapsed().as_millis() as u64;
+                let time_to_wait = 2800 - started_at.elapsed().as_millis() as u64;
                 if time_to_wait > 1 {
                     thread::sleep(Duration::from_millis(time_to_wait));
                 }
             } else {
-                thread::sleep(Duration::from_secs(10));
+                thread::sleep(Duration::from_secs(3));
             }
             if SHUTDOWN.load(Ordering::Relaxed) {
+                println!("WvW: shutdown worker thread");
                 break;
             }
         }
@@ -145,6 +149,11 @@ async fn fetch_matchup_async(world_id: i32) -> Result<Matchup, String> { // Chan
     };
 
     let result = client.get(url).send().await;
+
+    // This weirdly can result in a 404 with
+    //{
+    //   "text": "world not currently in a match"
+    // }
 
     let response;
     match result {

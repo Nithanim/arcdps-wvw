@@ -1,5 +1,6 @@
 use std::ffi::{c_char, c_void, CStr};
 use std::ptr::{null, null_mut};
+use crate::IS_IN_LOADING_SCREEN;
 use crate::settings::render_options;
 
 static mut filelog: *mut c_void = null_mut();
@@ -39,13 +40,11 @@ pub unsafe extern "C" fn mod_combat(ev: *mut cbtevent, src: *mut ag, dst: *mut a
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn mod_imgui(p_not_char_selection_or_loading: u32, p_hide_if_combat_or_ooc: u32) -> usize
+pub unsafe extern "C" fn mod_imgui(not_charsel_or_loading: u32, hide_if_combat_or_ooc: u32) -> usize
 {
+    IS_IN_LOADING_SCREEN = not_charsel_or_loading == 0;
+
     crate::nithanim_ui();
-    if p_not_char_selection_or_loading == 0 || p_hide_if_combat_or_ooc != 0
-    {
-        return 0;
-    }
     return 0;
 }
 

@@ -13,10 +13,10 @@ mod world2d;
 
 pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
     let ml = get_mumble_link();
+    debug::render_debug(settings, ml.as_ref());
+
     if ml.is_some() && !is_in_loading_screen() {
         world3d::render_hud(settings, ml.as_ref().unwrap(), icons, shared_data, objectives);
-
-        debug::render_debug(settings, ml.as_ref().unwrap());
     }
     world2d::render_map(objectives, icons, shared_data, settings);
     if is_game() {

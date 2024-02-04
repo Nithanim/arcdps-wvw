@@ -94,7 +94,7 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                             unsafe {
                                 {
                                     igSetNextWindowPos(ImVec2::new(imgui_coords.x, imgui_coords.y), 0, ImVec2::new(0.5, 0.5));
-                                    let name = CString::new(format!("WvWOverlayObjective{}", obj.id)).unwrap();
+                                    let name = CString::new(format!("{}##WvWExt{}", objective_definition.name, obj.id)).unwrap();
                                     igBegin(name.as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
                                 }
 

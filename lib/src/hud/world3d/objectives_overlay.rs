@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ffi::{CString};
-use imgui_sys::{igBeginChildFrame, igBeginChildID, igBeginChildStr, igGetBackgroundDrawList, igGetColorU32Vec4, igGetTextLineHeight, igGetTextLineHeightWithSpacing, igImage, igSameLine, igSetCursorScreenPos, igText, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImVec2, ImVec4};
-use mumblelink_reader::mumble_link::{MumbleLinkData, Vector3D};
+use imgui_sys::{igBegin, igEnd, igGetBackgroundDrawList, igGetColorU32Vec4, igGetTextLineHeight, igImage, igSameLine, igSetNextWindowPos, igText, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiWindowFlags, ImVec2, ImVec4};
+use mumblelink_reader::mumble_link::{MumbleLinkData};
 use nalgebra::{distance_squared, Point2, Point3};
 use time::{Duration, OffsetDateTime};
 use crate::{api, icons, ImGuiIcon};
@@ -14,6 +14,14 @@ use crate::hud::world3d::graphics_uniform::{get_view_projection_matrix, Graphics
 use crate::hud::world3d::helpers::get_current_map_id;
 use crate::settings::Settings;
 use crate::utils::get_mumble_link_avatar_position;
+
+const WINDOW_FLAGS: ImGuiWindowFlags = (
+    imgui_sys::ImGuiWindowFlags_NoInputs
+        | imgui_sys::ImGuiWindowFlags_NoNav
+        | imgui_sys::ImGuiWindowFlags_NoDecoration
+        | imgui_sys::ImGuiWindowFlags_NoSavedSettings
+        | imgui_sys::ImGuiWindowFlags_NoFocusOnAppearing
+        | imgui_sys::ImGuiWindowFlags_NoBringToFrontOnFocus) as ImGuiWindowFlags;
 
 pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, objective_definitions: &Vec<ObjectiveDefinition>) {
     let screen_size = screen::get_screen_size();
@@ -72,33 +80,37 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
 
                         let distance_squared = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar.x, avatar.z));
                         let distance_bay_to_spawn_camp_squared = 171185460.0 * 1.5;
-                        if distance_squared > distance_bay_to_spawn_camp_squared {
+                        if false || distance_squared > distance_bay_to_spawn_camp_squared {
                             // Don't render if far away
                             return;
-                        } else if distance_squared < 1000.0_f32.powi(2) {
+                        } else if false || distance_squared < 1000.0_f32.powi(2) {
                             return;
                         }
+
+                        // TODO maybe allow rendering not on avatar height, but rather based on looking vector
+                        // e.g. you generally look down on char, so offset pos below avatar height
 
                         gu.render(target, |imgui_coords| {
                             unsafe {
                                 {
-                                    igSetCursorScreenPos(ImVec2::new(imgui_coords.x, imgui_coords.y));
-                                    //igBeginChildID(ImGuiID::from_f32(f32::abs(imgui_coords.x) * f32::abs(imgui_coords.y)), );
+                                    igSetNextWindowPos(ImVec2::new(imgui_coords.x, imgui_coords.y), 0, ImVec2::new(0.5, 0.5));
+                                    let name = CString::new(format!("WvWOverlayObjective{}", obj.id)).unwrap();
+                                    igBegin(name.as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
+                                }
+
+                                {
                                     let name = CString::new(objective_definition.name.as_str()).unwrap();
                                     igText(name.as_ptr());
                                 }
 
                                 let mut line = 1;
                                 let line_height = igGetTextLineHeight();
-                                let line_height_with_spacing = igGetTextLineHeightWithSpacing();
 
                                 let buff_remaining = calculate_buff_remaining(obj.last_flipped, current);
                                 if buff_remaining
                                     .map(|diff| diff < Duration::minutes(5))
                                     .unwrap_or(false) {
-                                    igSetCursorScreenPos(ImVec2::new(imgui_coords.x, imgui_coords.y + line_height_with_spacing * line as f32));
-
-                                    let icon = icons.get(&crate::icons::Icon::BuffRighteousIndignation).unwrap();
+                                    let icon = icons.get(&icons::Icon::BuffRighteousIndignation).unwrap();
                                     igImage(
                                         icon.to_imgui_id(),
                                         ImVec2::new(line_height, line_height),
@@ -117,11 +129,11 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                                 }
 
                                 {
-                                    igSetCursorScreenPos(ImVec2::new(imgui_coords.x, imgui_coords.y + line_height_with_spacing * line as f32));
                                     let coordinates_string = CString::new(format!("{},{}", map_coordinates[0], map_coordinates[1])).unwrap();
                                     igText(coordinates_string.as_ptr());
                                     line += 1;
                                 }
+                                igEnd();
                             }
 
                             render_quad(imgui_coords);

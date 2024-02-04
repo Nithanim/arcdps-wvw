@@ -41,7 +41,7 @@ pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<
             if let Ok(matchup) = &shared_data.matchup {
                 let map = shared_data.maps.as_ref().unwrap().iter().find(|e| e.id == current_map_id);
                 if let Some(map) = map {
-                    render_objectives(gu, current_map_id, icons, matchup, objective_definitions, map, get_mumble_link_avatar_position(ml));
+                    render_objectives(gu, current_map_id, icons, matchup, objective_definitions, map, get_mumble_link_avatar_position(ml), settings);
                 }
             }
         }
@@ -61,7 +61,7 @@ pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<
     }
 }
 
-fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<icons::Icon, ImGuiIcon>, matchup: &Matchup, objective_definitions: &Vec<ObjectiveDefinition>, map: &api::map_api::Map, avatar: Point3<f32>) {
+fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<icons::Icon, ImGuiIcon>, matchup: &Matchup, objective_definitions: &Vec<ObjectiveDefinition>, map: &api::map_api::Map, avatar: Point3<f32>, settings: &Settings) {
     let current = OffsetDateTime::now_utc();
 
 
@@ -128,7 +128,7 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                                     line += 1;
                                 }
 
-                                {
+                                if settings.debug {
                                     let coordinates_string = CString::new(format!("{},{}", map_coordinates[0], map_coordinates[1])).unwrap();
                                     igText(coordinates_string.as_ptr());
                                     line += 1;
@@ -136,7 +136,9 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                                 igEnd();
                             }
 
-                            render_quad(imgui_coords);
+                            if settings.debug {
+                                render_quad(imgui_coords);
+                            }
                         })
                     }
                 }

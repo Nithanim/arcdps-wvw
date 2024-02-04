@@ -96,6 +96,9 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                                     igSetNextWindowPos(ImVec2::new(imgui_coords.x, imgui_coords.y), 0, ImVec2::new(0.5, 0.5));
                                     let name = CString::new(format!("{}##WvWExt{}", objective_definition.name, obj.id)).unwrap();
                                     igBegin(name.as_ptr(), &mut true, WINDOW_FLAGS as ImGuiWindowFlags);
+                                    // Using the default window title bar is results in truncated titles.
+                                    // Maybe there is a fix for that?
+                                    // Also, the close button is shown, which shouldn't be.
                                 }
 
                                 {

@@ -27,6 +27,7 @@ pub struct SettingsCompass {
     pub color_primary: [f32; 3],
     pub color_secondary: [f32; 3],
     pub opacity: f32,
+    pub only_in_wvw: bool,
 }
 
 pub static mut SETTINGS: Settings = Settings {
@@ -43,6 +44,7 @@ pub static mut SETTINGS: Settings = Settings {
         color_primary: [1.0, 1.0, 1.0],
         color_secondary: [0.0, 0.0, 0.0],
         opacity: 1.0,
+        only_in_wvw: true,
     },
     debug: false,
 };
@@ -70,6 +72,7 @@ pub unsafe fn render_options() {
     igColorEdit3(c_str!("Primary color").as_ptr(), settings.compass.color_primary.as_mut_ptr(), 0);
     igColorEdit3(c_str!("Secondary color").as_ptr(), settings.compass.color_secondary.as_mut_ptr(), 0);
     igSliderFloat(c_str!("Opacity").as_ptr(), &mut settings.compass.opacity, 0.0, 1.0, c_str!( "%.3f").as_ptr(), 0);
+    igCheckbox(c_str!("Show in WvW only").as_ptr(), &mut settings.compass.only_in_wvw);
     igPopID();
 
     igSeparator();

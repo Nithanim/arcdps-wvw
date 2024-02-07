@@ -15,6 +15,13 @@ pub fn swap_static_mut_option<T>(reference: &mut Option<T>, new: Option<T>) {
     }
 }
 
+pub fn is_wvw_map_id(map_id: u32) -> bool {
+    match map_id {
+        38 | 94 | 95 | 96 => true,
+        _ => false
+    }
+}
+
 const INCH_TO_METER: f32 = 0.0254;
 const METER_TO_INCH: f32 = 1.0 / INCH_TO_METER;
 

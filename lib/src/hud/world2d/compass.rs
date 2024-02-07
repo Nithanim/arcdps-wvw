@@ -4,8 +4,10 @@ use imgui_sys::{igBegin, igDummy, igEnd, igGetColorU32Vec4, igGetCursorPos, igGe
 use mumblelink_reader::mumble_link::MumbleLinkData;
 use nalgebra::{Isometry2, Matrix3, min, Point2, Point3, Rotation2, Vector2};
 use once_cell::sync::Lazy;
+use crate::hud::world3d::helpers::get_current_map_id;
 use crate::is_in_loading_screen;
 use crate::settings::{Settings, SettingsCompass};
+use crate::utils::is_wvw_map_id;
 
 struct Colors {
     primary: ImVec4,
@@ -13,21 +15,35 @@ struct Colors {
 }
 
 pub unsafe fn render2d(ml: &MumbleLinkData, settings: &mut Settings) {
-    let camera = Vector2::new(ml.camera.front[0], ml.camera.front[2]);
-    if !is_in_loading_screen() {
+    if should_render_compass(ml, settings) {
+        let camera = Vector2::new(ml.camera.front[0], ml.camera.front[2]);
         render2d_internal(settings, camera);
     }
 }
 
+fn should_render_compass(ml: &MumbleLinkData, settings: &Settings) -> bool {
+    if !settings.compass.show {
+        return false;
+    } else if is_in_loading_screen() {
+        return false;
+    } else if settings.compass.only_in_wvw {
+        return is_wvw_map_id(get_current_map_id(ml));
+    } else {
+        true
+    }
+}
+
 pub unsafe fn render2d_dummy(settings: &mut Settings) {
-    static mut CAMERA_VEC: Vector2<f32> = Vector2::new(0.0, 1.0);
+    if settings.compass.show {
+        static mut CAMERA_VEC: Vector2<f32> = Vector2::new(0.0, 1.0);
 
-    static ROT: Lazy<Rotation2<f32>> = Lazy::new(|| Rotation2::new(PI * 2.0 / 365.0));
+        static ROT: Lazy<Rotation2<f32>> = Lazy::new(|| Rotation2::new(PI * 2.0 / 365.0));
 
-    let r: &Rotation2<f32> = &ROT;
-    let c = r * CAMERA_VEC;
-    CAMERA_VEC = c;
-    render2d_internal(settings, c);
+        let r: &Rotation2<f32> = &ROT;
+        let c = r * CAMERA_VEC;
+        CAMERA_VEC = c;
+        render2d_internal(settings, c);
+    }
 }
 
 const TRANSPARENT_WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackground
@@ -36,21 +52,19 @@ const TRANSPARENT_WINDOW_FLAGS: ImGuiWindowFlags = (ImGuiWindowFlags_NoBackgroun
     | ImGuiWindowFlags_NoDecoration) as ImGuiWindowFlags;
 
 pub unsafe fn render2d_internal(settings: &mut Settings, direction_camera: Vector2<f32>) {
-    if settings.compass.show {
-        igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
-        igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
+    igPushStyleVarVec2(ImGuiStyleVar_WindowPadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
+    igPushStyleVarVec2(ImGuiStyleVar_FramePadding as ImGuiStyleVar, ImVec2::new(0.0, 0.0));
 
-        let window_flags: ImGuiWindowFlags = match settings.compass.lock {
-            true => TRANSPARENT_WINDOW_FLAGS,
-            false => 0,
-        };
-        if igBegin(c_str!("Compass").as_ptr(), &mut settings.compass.show, window_flags) {
-            draw_compass(&settings.compass, direction_camera);
-        }
-        igEnd();
-
-        igPopStyleVar(2);
+    let window_flags: ImGuiWindowFlags = match settings.compass.lock {
+        true => TRANSPARENT_WINDOW_FLAGS,
+        false => 0,
+    };
+    if igBegin(c_str!("Compass").as_ptr(), &mut settings.compass.show, window_flags) {
+        draw_compass(&settings.compass, direction_camera);
     }
+    igEnd();
+
+    igPopStyleVar(2);
 }
 
 unsafe fn draw_compass(settings: &SettingsCompass, direction_camera: Vector2<f32>) {

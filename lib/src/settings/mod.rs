@@ -8,7 +8,7 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Settings {
     pub world_id: i32,
-    pub show_objectives_overlay: bool,
+    pub overlay: SettingsOverlay,
 
     pub show_current: bool,
     pub show_red: bool,
@@ -30,9 +30,18 @@ pub struct SettingsCompass {
     pub only_in_wvw: bool,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SettingsOverlay {
+    pub show: bool,
+    pub distance_max: f32,
+}
+
 pub static mut SETTINGS: Settings = Settings {
     world_id: 0,
-    show_objectives_overlay: false,
+    overlay: SettingsOverlay {
+        show: false,
+        distance_max: 1.5,
+    },
     show_current: false,
     show_red: false,
     show_green: false,
@@ -90,7 +99,13 @@ pub unsafe fn render_options() {
 
     igPushIDInt(3);
     igText(c_str!("Overlay").as_ptr());
-    igCheckbox(c_str!("Show").as_ptr(), &mut settings.show_objectives_overlay);
+    igCheckbox(c_str!("Show").as_ptr(), &mut settings.overlay.show);
+    igSliderFloat(c_str!("Maximum distance").as_ptr(), &mut settings.overlay.distance_max, 0.5, 3.0, c_str!( "%.3f").as_ptr(), 0);
+    if igIsItemHovered(0) {
+        igSetTooltip(c_str!("Distance below which the overlay for objectives are displayed. \
+        This number is multiplied by the distance between bay and south-west spawn camp. \
+        Default is 1.0.").as_ptr());
+    }
     igPopID();
 
     igPushIDInt(4);

@@ -27,7 +27,7 @@ pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<
     let screen_size = screen::get_screen_size();
     let view_projection = get_view_projection_matrix(&ml);
 
-    if settings.show_objectives_overlay {
+    if settings.overlay.show {
         let gu = GraphicsUniform {
             screen_size,
             view_projection,
@@ -78,12 +78,13 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
 
                         let target = Point3::new(map_coordinates[0], avatar.y, map_coordinates[1]);
 
-                        let distance_squared = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar.x, avatar.z));
-                        let distance_bay_to_spawn_camp_squared = 171185460.0 * 1.5;
-                        if false || distance_squared > distance_bay_to_spawn_camp_squared {
+                        let distance_in_game = distance_squared(&Point2::new(target.x, target.z), &Point2::new(avatar.x, avatar.z));
+                        let distance_bay_to_spawn_camp = 13083.0;
+                        let distance_max = (distance_bay_to_spawn_camp * settings.overlay.distance_max).powi(2);
+                        if distance_in_game > distance_max {
                             // Don't render if far away
                             return;
-                        } else if false || distance_squared < 1000.0_f32.powi(2) {
+                        } else if distance_in_game < 1000.0_f32.powi(2) {
                             return;
                         }
 

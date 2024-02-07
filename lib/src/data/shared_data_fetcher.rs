@@ -101,6 +101,6 @@ pub fn shutdown() {
 }
 
 fn settings_need_data(settings: &Settings) -> bool {
-    settings.show_red || settings.show_green || settings.show_blue || settings.show_eternal || settings.show_objectives_overlay
+    settings.show_red || settings.show_green || settings.show_blue || settings.show_eternal || settings.overlay.show
 }
 

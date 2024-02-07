@@ -15,17 +15,29 @@ pub fn swap_static_mut_option<T>(reference: &mut Option<T>, new: Option<T>) {
     }
 }
 
+const INCH_TO_METER: f32 = 0.0254;
+const METER_TO_INCH: f32 = 1.0 / INCH_TO_METER;
+
 pub fn get_mumble_link_camera_vec(ml: &MumbleLinkData) -> Vector3<f32> {
     let vec = ml.camera.front;
-    let inch_to_meter = 0.0254;
-    let meter_to_inch = 1.0 / inch_to_meter;
-    Vector3::new(vec[0] * meter_to_inch, vec[1] * meter_to_inch, -vec[2] * meter_to_inch)
+
+    Vector3::new(vec[0] * METER_TO_INCH, vec[1] * METER_TO_INCH, -vec[2] * METER_TO_INCH)
+}
+
+pub fn get_mumble_link_camera_position(ml: &MumbleLinkData) -> Point3<f32> {
+    get_point_from_mumble_link(ml.camera.position)
 }
 
 pub fn get_mumble_link_avatar_position(ml: &MumbleLinkData) -> Point3<f32> {
-    let p = ml.avatar.position;
-    let inch_to_meter = 0.0254;
-    let meter_to_inch = 1.0 / inch_to_meter;
-    Point3::new(p[0] * meter_to_inch, p[1] * meter_to_inch, -p[2] * meter_to_inch)
+    get_point_from_mumble_link(ml.avatar.position)
 }
+
+pub fn get_mumble_link_up() -> Vector3<f32> {
+    Vector3::new(0.0, 1.0, 0.0)
+}
+
+fn get_point_from_mumble_link(p: Vector3D) -> Point3<f32> {
+    Point3::new(p[0] * METER_TO_INCH, p[1] * METER_TO_INCH, -p[2] * METER_TO_INCH)
+}
+
 

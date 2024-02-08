@@ -1,6 +1,14 @@
+# WvW utilities for arcdps
+
 Addon for arcdps that does random stuff for WvW.
-For now, it just displays the current state of a wvw map using the guild wars 2 api.
-Currently, it is in very early stages and has a bad UI and also hardcoded data.
+
+Current features:
+
+* Minimap of a WvW map
+* Compass
+* World-Overlay on objectives that show the buff timer
+
+The latest build can be found here: https://github.com/Nithanim/arcdps-wvw/raw/artifacts/arcdps_wvw.dll
 
 ## Building
 

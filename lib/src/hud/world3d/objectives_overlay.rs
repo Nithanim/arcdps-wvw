@@ -193,6 +193,8 @@ fn format_time_left(diff: Duration) -> String {
         let seconds_in_minute = seconds - minutes * 60;
         if seconds_in_minute > 10 {
             string.push(('0' as u8 + (seconds_in_minute / 10) as u8) as char);
+        } else {
+            string.push(' ');
         }
         string.push(('0' as u8 + (seconds_in_minute % 10) as u8) as char);
         string.push('s');

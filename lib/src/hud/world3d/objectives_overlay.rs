@@ -22,6 +22,7 @@ const WINDOW_FLAGS: ImGuiWindowFlags = (
         | imgui_sys::ImGuiWindowFlags_NoDecoration
         | imgui_sys::ImGuiWindowFlags_NoSavedSettings
         | imgui_sys::ImGuiWindowFlags_NoFocusOnAppearing
+        | imgui_sys::ImGuiWindowFlags_AlwaysAutoResize
         | imgui_sys::ImGuiWindowFlags_NoBringToFrontOnFocus) as ImGuiWindowFlags;
 
 pub fn render_overlay(settings: &Settings, ml: &MumbleLinkData, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, objective_definitions: &Vec<ObjectiveDefinition>) {
@@ -186,8 +187,9 @@ fn format_time_left(diff: Duration) -> String {
     if seconds >= 60 {
         string.push(('0' as u8 + minutes as u8) as char);
         string.push('m');
+        string.push(' ');
     }
-    if seconds > 0 {
+    if seconds > 0 || minutes > 0 {
         let seconds_in_minute = seconds - minutes * 60;
         if seconds_in_minute > 10 {
             string.push(('0' as u8 + (seconds_in_minute / 10) as u8) as char);
@@ -195,7 +197,7 @@ fn format_time_left(diff: Duration) -> String {
         string.push(('0' as u8 + (seconds_in_minute % 10) as u8) as char);
         string.push('s');
     }
-    format!("{:>6}", string)
+    format!("{:>7}", string)
 }
 
 fn continent_to_map_coordinates(map: &Map, continent_coords: ContinentCoordinates) -> Point2<f32> {

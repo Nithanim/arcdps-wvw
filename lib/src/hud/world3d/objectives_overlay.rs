@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::{CString};
+use std::fmt::Formatter;
 use imgui_sys::{igBegin, igEnd, igGetBackgroundDrawList, igGetColorU32Vec4, igGetTextLineHeight, igImage, igSameLine, igSetNextWindowPos, igText, ImDrawList_PathLineTo, ImDrawList_PathStroke, ImGuiWindowFlags, ImVec2, ImVec4};
 use mumblelink_reader::mumble_link::{MumbleLinkData};
 use nalgebra::{distance_squared, Point2, Point3};
@@ -7,7 +8,7 @@ use time::{Duration, OffsetDateTime};
 use crate::{api, icons, ImGuiIcon};
 use crate::api::map_api::Map;
 use crate::api::matchup::Matchup;
-use crate::api::objective_definition::{ContinentCoordinates, ObjectiveDefinition};
+use crate::api::objective_definition::{ContinentCoordinates, ObjectiveDefinition, Type};
 use crate::data::SharedData;
 use crate::hud::{screen};
 use crate::hud::world3d::graphics_uniform::{get_view_projection_matrix, GraphicsUniform};
@@ -73,6 +74,10 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
 
                 if let Some(objective_definition) = objective_definition {
                     if let Some(continent_coords) = objective_definition.coord {
+                        if !matches!(objective_definition.type_, Type::CAMP | Type::TOWER | Type::KEEP | Type::CASTLE) {
+                            return;
+                        }
+
                         let map_coordinates = continent_to_map_coordinates(map, continent_coords);
 
 
@@ -133,7 +138,13 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                                 }
 
                                 if settings.debug {
-                                    let coordinates_string = CString::new(format!("{},{}", map_coordinates[0], map_coordinates[1])).unwrap();
+                                    let coordinates_string = CString::new(format!("Coords: {},{}", map_coordinates[0], map_coordinates[1])).unwrap();
+                                    igText(coordinates_string.as_ptr());
+                                    line += 1;
+
+
+                                    let time = obj.last_flipped.map(|e| e.format(&time::format_description::well_known::Rfc3339).unwrap()).unwrap_or(String::from("-"));
+                                    let coordinates_string = CString::new(format!("Last flipped: {}", time)).unwrap();
                                     igText(coordinates_string.as_ptr());
                                     line += 1;
                                 }
@@ -141,7 +152,7 @@ fn render_objectives(gu: GraphicsUniform, current_map_id: u32, icons: &HashMap<i
                             }
 
                             if settings.debug {
-                                render_quad(imgui_coords);
+                                // render_quad(imgui_coords);
                             }
                         })
                     }

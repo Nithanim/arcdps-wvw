@@ -8,6 +8,8 @@ Current features:
 * Compass
 * World-Overlay on objectives that show the buff timer
 
+You can find [images on the wiki](https://github.com/Nithanim/arcdps-wvw/wiki).
+
 The latest build can be found here: https://github.com/Nithanim/arcdps-wvw/raw/artifacts/arcdps_wvw.dll
 
 ## Building

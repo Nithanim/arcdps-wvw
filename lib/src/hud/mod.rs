@@ -18,7 +18,7 @@ pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icon
     if ml.is_some() && !is_in_loading_screen() {
         world3d::render_hud(settings, ml.as_ref().unwrap(), icons, shared_data, objectives);
     }
-    world2d::render_map(objectives, icons, shared_data, settings);
+    world2d::render_map(objectives, icons, shared_data, ml.as_ref(), settings);
     if is_game() {
         if ml.is_some() && !is_in_loading_screen() {
             world2d::render_compass(ml.as_ref().unwrap(), settings);

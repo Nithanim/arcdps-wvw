@@ -4,14 +4,16 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::time::Instant;
 use imgui_sys::*;
+use mumblelink_reader::mumble_link::MumbleLinkData;
 use crate::api::objective_definition;
 use crate::api::objective_definition::ObjectiveDefinition;
-use crate::{icons, ImGuiIcon};
+use crate::{icons, ImGuiIcon, is_in_loading_screen};
 use crate::api::matchup::Matchup;
 use crate::api::objective::Objective;
 use crate::api::world_map_type::WorldMapType;
 use crate::data::SharedData;
 use crate::hud::world2d::map_renderer::rendering::render_map;
+use crate::hud::world3d::helpers::get_current_map_id;
 use crate::settings::Settings;
 
 pub struct MapWindow<'a> {
@@ -28,8 +30,12 @@ struct Data<'a> {
     icons: &'a HashMap<icons::Icon, ImGuiIcon>,
 }
 
-pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
+pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, ml: Option<&MumbleLinkData>, settings: &mut Settings) {
     //let map_types_to_render = get_map_types_to_render(settings, );
+
+    if !settings.show_eternal && !settings.show_red && !settings.show_green && !settings.show_blue && !settings.show_current {
+        return;
+    }
 
     let pre_computed: HashMap<WorldMapType, Data> = pre_compute(objectives, icons, shared_data);
 
@@ -47,8 +53,10 @@ pub unsafe fn render(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icon
     if settings.show_blue {
         render_pre("Blue borderlands", pre_computed.get(&WorldMapType::BLUE).unwrap(), shared_data, &mut settings.show_blue);
     }
-    if settings.show_current {
-        render_pre("Current borderlands", pre_computed.get(&WorldMapType::ETERNAL).unwrap(), shared_data, &mut settings.show_current);
+    if settings.show_current && !is_in_loading_screen() {
+        if let Some(world_map_type) = ml.map(get_current_map_id).and_then(map_id_to_world_map_type) {
+            render_pre("Current borderlands", pre_computed.get(&world_map_type).unwrap(), shared_data, &mut settings.show_current);
+        }
     }
 }
 
@@ -147,3 +155,12 @@ fn is_interesting_objective(e: &&ObjectiveDefinition) -> bool {
     }
 }
 
+fn map_id_to_world_map_type(world_id: u32) -> Option<WorldMapType> {
+    match world_id {
+        38 => Some(WorldMapType::ETERNAL),
+        94 => Some(WorldMapType::RED),
+        95 => Some(WorldMapType::GREEN),
+        96 => Some(WorldMapType::BLUE),
+        _ => None
+    }
+}

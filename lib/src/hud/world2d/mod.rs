@@ -9,8 +9,8 @@ pub mod map_renderer;
 mod compass;
 pub mod debug;
 
-pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, settings: &mut Settings) {
-    map_renderer::render(objectives, icons, shared_data, settings);
+pub unsafe fn render_map(objectives: &Vec<ObjectiveDefinition>, icons: &HashMap<icons::Icon, ImGuiIcon>, shared_data: Option<&SharedData>, ml: Option<&MumbleLinkData>, settings: &mut Settings) {
+    map_renderer::render(objectives, icons, shared_data, ml, settings);
 }
 
 pub unsafe fn render_compass(ml: &MumbleLinkData, settings: &mut Settings) {

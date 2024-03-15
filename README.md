@@ -4,7 +4,7 @@ Addon for arcdps that does random stuff for WvW.
 
 Current features:
 
-* Minimap of a WvW map
+* Minimap of a WvW map (basic)
 * Compass
 * World-Overlay on objectives that show the buff timer
 
@@ -40,7 +40,7 @@ You most likely need to either install gcc (mingw64 for windows) somehow or [use
 
 * Step counter between fights
 * Show upgrades, tier and buff on map
-* Overlay HUD for objectives in looking direction
+* More data for overlay HUD for objectives
 * Visualize claim change on map
 * Share and display position on HUD of other players
 * Second-squad helper
@@ -50,4 +50,7 @@ You most likely need to either install gcc (mingw64 for windows) somehow or [use
   * Define invite text
   * Button to copy text
   * Button to automatically post
+* Inc warning for commander by players
+  * Simple button?
+  * Share location with commander
 
